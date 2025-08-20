@@ -3,7 +3,6 @@ export var UserRole;
     UserRole["SUPER_ADMIN"] = "SUPER_ADMIN";
     UserRole["ADMIN"] = "ADMIN";
     UserRole["VENDOR"] = "VENDOR";
-    UserRole["CASHIER"] = "CASHIER";
 })(UserRole || (UserRole = {}));
 const roleAuth = (allowedRoles) => {
     return (req, res, next) => {

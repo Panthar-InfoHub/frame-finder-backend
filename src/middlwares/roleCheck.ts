@@ -5,7 +5,6 @@ export enum UserRole {
     SUPER_ADMIN = 'SUPER_ADMIN',
     ADMIN = 'ADMIN',
     VENDOR = "VENDOR",
-    CASHIER = "CASHIER",
 }
 
 const roleAuth = (allowedRoles: UserRole[]) => {
