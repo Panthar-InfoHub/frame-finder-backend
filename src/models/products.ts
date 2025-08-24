@@ -59,7 +59,7 @@ const productSchema = new mongoose.Schema({
             values: ['male', 'female', 'unisex'],
             message: '{VALUE} is not a valid gender'
         },
-        default: 'unisex'
+        default: ['unisex']
     }],
     stock: {
         current: {

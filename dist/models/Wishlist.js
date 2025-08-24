@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 const itemSchema = new mongoose.Schema({
     productId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -20,7 +19,7 @@ const itemSchema = new mongoose.Schema({
     },
     prescription: {
         type: mongoose.Schema.Types.Mixed,
-        required: function (this: any) {
+        required: function () {
             return this.is_prescription;
         }
     },
@@ -36,15 +35,13 @@ const itemSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     }
-}, { _id: false })
-
+}, { _id: false });
 const wishListSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required:[true , "User ID is required"]
+        required: [true, "User ID is required"]
     },
     items: [itemSchema]
 }, { timestamps: true });
-
 export const WishList = mongoose.model("WishList", wishListSchema);
