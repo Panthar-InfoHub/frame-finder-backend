@@ -10,6 +10,7 @@ import { vendorRouter } from "./routes/vendor-routes.js"
 import { categoryRouter } from "./routes/category-routes.js"
 import { productRouter } from "./routes/product-routes.js"
 import { wishlistRouter } from "./routes/wishlist-routes.js"
+import { vendorMiscRouter } from "./routes/vendor-misc-routes.js"
 
 //Configurations
 const app = express()
@@ -29,6 +30,7 @@ if (process.env.ENVIROMENT === "dev") {
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/vendor", vendorRouter);
+app.use("/api/v1/vendor-misc", vendorMiscRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/wishlist", wishlistRouter);
 app.use("/api/v1/vendor-request", vendorRequestRoutes);

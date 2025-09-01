@@ -26,8 +26,8 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
             return;
         }
 
-        await session.commitTransaction();
         console.debug("\nProduct created successfully: ", product);
+        await session.commitTransaction();
         console.debug("Transaction committed successfully");
 
         res.status(201).send({
@@ -51,6 +51,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         const updateData = req.body;
 
         console.debug(`Updating product with ID: ${productId}`);
+        console.debug("\n Updating data => ", updateData)
         if (!productId) {
             console.warn("No product ID provided");
             res.status(400).send({ success: false, message: "Product ID is required" });
