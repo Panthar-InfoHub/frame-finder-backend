@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import { generateReadableProductCode } from "../lib/helper.js";
 
-const productSchema = new mongoose.Schema({
+export const baseProductSchema = new mongoose.Schema({
     productCode: {
         type: String,
         unique: true,
@@ -26,6 +27,9 @@ const productSchema = new mongoose.Schema({
     ],
     frame_color: [String],
     temple_color: [String],
+    material: [String],
+    shape: [String],
+    style: [String],
     hsn_code: {
         type: String,
         required: [true, "HSN Code is required, cannot be empty!!"],
@@ -36,7 +40,6 @@ const productSchema = new mongoose.Schema({
         required: [true, 'Product price is required'],
         min: [0, 'Product price must be positive'],
     },
-
     sizes: [{
         type: String,
         enum: {
@@ -70,11 +73,11 @@ const productSchema = new mongoose.Schema({
             min: 0
         }
     },
-    categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: [true, 'Product category is required']
-    },
+    // categoryId: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: "Category",
+    //     required: [true, 'Product category is required']
+    // },
     vendorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Vendor",
@@ -97,16 +100,19 @@ const productSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-productSchema.index({
+baseProductSchema.index({
     brand_name: 'text',
     desc: 'text',
-    categoryId: 1
+    vendorId: 1
 })
+
+
+const productSchema = baseProductSchema.clone();
 
 // Generate product ID before saving
 productSchema.pre('validate', async function (next) {
     if (this.isNew && !this.productCode) {
-        this.productCode = `FRA${Math.floor(100 + Math.random() * 900)}`;
+        this.productCode = generateReadableProductCode("FRA");
     }
     next();
 });

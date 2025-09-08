@@ -4,6 +4,7 @@ export const auth = async (req, res, next) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
         if (!token) {
+            console.warn("No token provided");
             return res.status(401).json({
                 success: false,
                 message: 'Access token required'
@@ -17,6 +18,7 @@ export const auth = async (req, res, next) => {
         };
         if (decoded.role === "ADMIN" || "SUPER_ADMIN") {
             const admin = await Admin.findById(decoded.id);
+            console.log("Admin found ==> ", admin);
             if (!admin) {
                 return res.status(401).json({
                     success: false,
@@ -42,6 +44,13 @@ export const auth = async (req, res, next) => {
         next();
     }
     catch (error) {
+        if (error.name === "TokenExpiredError") {
+            return res.status(401).json({
+                success: false,
+                message: "Token has expired, please login again"
+            });
+        }
+        console.error("Error in authjs ==> ", error);
         res.status(401).json({
             success: false,
             message: 'Invalid token'

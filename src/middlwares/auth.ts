@@ -14,14 +14,13 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
         if (!token) {
+            console.warn("No token provided")
             return res.status(401).json({
                 success: false,
                 message: 'Access token required'
             });
         }
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-
         let resData: resData = {
             id: "",
             email: "",
@@ -30,7 +29,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
 
         if (decoded.role === "ADMIN" || "SUPER_ADMIN") {
             const admin = await Admin.findById(decoded.id)
-
+            console.log("Admin found ==> ", admin)
             if (!admin) {
                 return res.status(401).json({
                     success: false,
@@ -58,7 +57,15 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         };
 
         next();
-    } catch (error) {
+    } catch (error: any) {
+        if (error.name === "TokenExpiredError") {
+            return res.status(401).json({
+                success: false,
+                message: "Token has expired, please login again"
+            });
+        }
+
+        console.error("Error in authjs ==> ", error)
         res.status(401).json({
             success: false,
             message: 'Invalid token'

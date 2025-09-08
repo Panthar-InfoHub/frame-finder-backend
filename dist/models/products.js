@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
-const productSchema = new mongoose.Schema({
-    name: {
+import { generateReadableProductCode } from "../lib/helper.js";
+export const baseProductSchema = new mongoose.Schema({
+    productCode: {
+        type: String,
+        unique: true,
+        required: true
+    },
+    brand_name: {
         type: String,
         required: [true, 'Product name is required'],
         trim: true,
@@ -18,44 +24,33 @@ const productSchema = new mongoose.Schema({
             }
         }
     ],
+    frame_color: [String],
+    temple_color: [String],
+    material: [String],
+    shape: [String],
+    style: [String],
+    hsn_code: {
+        type: String,
+        required: [true, "HSN Code is required, cannot be empty!!"],
+        trim: true
+    },
     price: {
         type: Number,
         required: [true, 'Product price is required'],
         min: [0, 'Product price must be positive'],
     },
-    discount: {
-        type: Number,
-        default: 0,
-        min: [0, 'Product discount must be positive'],
-    },
-    categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: [true, 'Product category is required']
-    },
-    product_type: {
-        type: String,
-        enum: {
-            values: ['sunglasses', 'contact_lens', 'eyeglasses', 'powered_lens'],
-            message: '{VALUE} is not a valid product type'
-        },
-        required: [true, 'Product type is required']
-    },
-    frame_type: {
-        type: String,
-        trim: true
-    },
-    vendorId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Vendor",
-        required: [true, 'Product vendor is required']
-    },
-    color: [String],
-    size: [String],
+    sizes: [{
+            type: String,
+            enum: {
+                values: ['S', 'M', 'L', 'XL'],
+                message: '{VALUE} is not a valid gender'
+            },
+            default: ['unisex']
+        }],
     gender: [{
             type: String,
             enum: {
-                values: ['male', 'female', 'unisex'],
+                values: ['male', 'female', 'kids', 'unisex'],
                 message: '{VALUE} is not a valid gender'
             },
             default: ['unisex']
@@ -77,11 +72,15 @@ const productSchema = new mongoose.Schema({
             min: 0
         }
     },
-    power_support: {
-        type: Boolean,
-        required: function () {
-            return this.product_type !== 'sunglasses';
-        },
+    // categoryId: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: "Category",
+    //     required: [true, 'Product category is required']
+    // },
+    vendorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Vendor",
+        required: [true, 'Product vendor is required']
     },
     rating: {
         type: Number,
@@ -95,12 +94,20 @@ const productSchema = new mongoose.Schema({
             values: ['active', 'inactive', 'pending'],
             message: '{VALUE} is not a valid status'
         },
-        default: 'pending'
+        default: 'active'
     }
 }, { timestamps: true });
-productSchema.index({
-    name: 'text',
+baseProductSchema.index({
+    brand_name: 'text',
     desc: 'text',
-    categoryId: 1
+    vendorId: 1
+});
+const productSchema = baseProductSchema.clone();
+// Generate product ID before saving
+productSchema.pre('validate', async function (next) {
+    if (this.isNew && !this.productCode) {
+        this.productCode = generateReadableProductCode("FRA");
+    }
+    next();
 });
 export const Product = mongoose.model("Product", productSchema);

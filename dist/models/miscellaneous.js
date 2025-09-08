@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 const miscSchema = new mongoose.Schema({
     type: {
         type: String,
@@ -11,6 +10,5 @@ const miscSchema = new mongoose.Schema({
             trim: true,
         }
     ]
-}, { timestamps: true })
-
-export const Miscellaneous = mongoose.model("miscellaneous", miscSchema)
+}, { timestamps: true });
+export const Miscellaneous = mongoose.model("miscellaneous", miscSchema);

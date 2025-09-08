@@ -2,30 +2,24 @@ import { Router } from "express";
 import { auth } from "../middlwares/auth.js";
 import { isAdmin, isVendor } from "../middlwares/roleCheck.js";
 import { addValues, removeValue, getValues, getAllTypes, deletetype } from "../controllers/misc-controller.js";
-
 export const miscRouter = Router();
-
 miscRouter.post("/", [
     auth,
     isAdmin
-], addValues)
-
+], addValues);
 miscRouter.put("/", [
     auth,
     isAdmin
-], removeValue)
-
+], removeValue);
 miscRouter.get("/values", [
     auth,
     isVendor
-], getValues)
-
+], getValues);
 miscRouter.get("/all", [
     auth,
     isAdmin
-], getAllTypes)
-
+], getAllTypes);
 miscRouter.delete("/:id", [
     auth,
     isAdmin
-], deletetype)
+], deletetype);
