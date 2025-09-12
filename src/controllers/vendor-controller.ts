@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { VendorService } from "../services/vendor-service.js";
 import { Vendor } from "../models/Vendor.js";
+import { generateTokens } from "../lib/uitils.js";
 
 export const createVendor = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -8,10 +9,20 @@ export const createVendor = async (req: Request, res: Response, next: NextFuncti
         const vendor = await VendorService.createVendor(req.body)
 
         console.debug("\nVendor created successfully: ", vendor);
+
+        const { accessToken } = generateTokens({ email: vendor.email, id: vendor._id, role: vendor.role })
+        const vendorRes = vendor.toObject();
+        delete vendorRes.password;
+
+        console.debug("Login token generated ==>", accessToken);
+
         res.status(201).send({
             success: true,
             message: "Vendor created successfully",
-            data: vendor
+            data: {
+                user: vendorRes,
+                accessToken: accessToken
+            }
         })
         return;
 

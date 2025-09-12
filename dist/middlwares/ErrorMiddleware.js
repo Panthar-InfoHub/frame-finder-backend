@@ -4,7 +4,7 @@ export const errorHandler = (err, _req, res, _next) => {
     let message = "Internal Server Error";
     let errorType = "ServerError";
     // Handle MongoDB errors
-    if (err.name === 'MongoError') {
+    if (err.name === 'MongoServerError') {
         // Duplicate key error
         if (err.code === 11000) {
             statusCode = 409;

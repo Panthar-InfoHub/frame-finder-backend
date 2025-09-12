@@ -11,13 +11,20 @@ export const registerAdmin = async (req: Request, res: Response, next: NextFunct
 
         console.debug("\nAdmin registered successfully:  ", admin);
 
+
+        const { accessToken } = generateTokens({ email, id: admin._id, role: admin.role })
         const adminRes = admin.toObject();
-        delete adminRes.password
+        delete adminRes.password;
+
+        console.debug("Login token generated ==>", accessToken);
 
         res.status(201).send({
             success: true,
             message: "Admin registered successfully",
-            admin: adminRes
+            data: {
+                admin: adminRes,
+                accessToken
+            }
         });
         return;
     } catch (error) {

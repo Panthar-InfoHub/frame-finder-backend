@@ -23,7 +23,7 @@ export const errorHandler: ErrorRequestHandler = (err: customError, _req: Reques
     let errorType = "ServerError";
 
     // Handle MongoDB errors
-    if (err.name === 'MongoError') {
+    if (err.name === 'MongoServerError') {
         // Duplicate key error
         if (err.code === 11000) {
             statusCode = 409;

@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { generatePassword } from "../lib/helper.js";
 const vendorSchema = new mongoose.Schema({
     business_name: {
         type: String,
@@ -57,16 +56,18 @@ const vendorSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
-    }
+    },
+    role: {
+        type: String,
+        default: "VENDOR"
+    },
 }, { timestamps: true });
 vendorSchema.pre('validate', async function (next) {
     console.debug("in vendor validate....");
     if (this.isNew) {
         console.debug("Generating password for new vendor...");
-        const pass = generatePassword("vendor");
-        //Send mail to vendor
         const salt = await bcrypt.genSalt(12);
-        this.password = await bcrypt.hash(pass, salt);
+        this.password = await bcrypt.hash(this.password, salt);
     }
     else if (this.isModified('password')) { // For password reset or manual change
         console.debug("Password modified, hashing new password...");

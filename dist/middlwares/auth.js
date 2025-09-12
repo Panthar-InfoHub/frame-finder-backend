@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Admin } from "../models/Admin.js";
+import { Vendor } from "../models/Vendor.js";
 export const auth = async (req, res, next) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -25,9 +26,21 @@ export const auth = async (req, res, next) => {
                     message: 'Admin not found'
                 });
             }
-            resData.id = admin._id;
+            resData.id = admin._id.toString();
             resData.email = admin._email;
             resData.role = admin.role;
+        }
+        if (decoded.role === "VENDOR") {
+            const vendor = await Vendor.findById(decoded.id);
+            if (!vendor) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Vendor not found in auth middleware'
+                });
+            }
+            resData.id = vendor._id.toString();
+            resData.email = vendor.email;
+            resData.role = vendor.role;
         }
         // const  = await UserRepository.findById(decoded.id); --> For user
         // if (!user || !user.isActive) {

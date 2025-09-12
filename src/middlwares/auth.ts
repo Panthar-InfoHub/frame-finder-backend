@@ -3,6 +3,7 @@ import { JwtPayload } from "../lib/uitils.js";
 import { Admin } from "../models/Admin.js";
 import { NextFunction, Request, Response } from "express";
 import { UserRole } from "./roleCheck.js";
+import { Vendor } from "../models/Vendor.js";
 
 interface resData {
     id: string,
@@ -36,9 +37,22 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
                     message: 'Admin not found'
                 });
             }
-            resData.id = admin._id;
+            resData.id = admin._id.toString();
             resData.email = admin._email;
             resData.role = admin.role
+        }
+
+        if (decoded.role === "VENDOR") {
+            const vendor = await Vendor.findById(decoded.id)
+            if (!vendor) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Vendor not found in auth middleware'
+                });
+            }
+            resData.id = vendor._id.toString();
+            resData.email = vendor.email;
+            resData.role = vendor.role
         }
 
         // const  = await UserRepository.findById(decoded.id); --> For user

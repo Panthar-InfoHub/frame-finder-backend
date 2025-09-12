@@ -6,8 +6,8 @@ import { isSuperAdmin, isVendor } from "../middlwares/roleCheck.js";
 export const vendorRouter = Router();
 
 vendorRouter.post("/", [
-    auth,
-    isSuperAdmin
+    // auth,
+    // isVendor
 ], createVendor)
 
 //Get all vendor

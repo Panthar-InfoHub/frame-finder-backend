@@ -6,12 +6,17 @@ export const registerAdmin = async (req, res, next) => {
         console.debug("\nRegistering admin for data:  ", req.body);
         const admin = await Admin.create({ email, password, role });
         console.debug("\nAdmin registered successfully:  ", admin);
+        const { accessToken } = generateTokens({ email, id: admin._id, role: admin.role });
         const adminRes = admin.toObject();
         delete adminRes.password;
+        console.debug("Login token generated ==>", accessToken);
         res.status(201).send({
             success: true,
             message: "Admin registered successfully",
-            admin: adminRes
+            data: {
+                admin: adminRes,
+                accessToken
+            }
         });
         return;
     }
