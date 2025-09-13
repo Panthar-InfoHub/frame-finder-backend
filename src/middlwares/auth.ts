@@ -28,7 +28,9 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
             role: ""
         }
 
-        if (decoded.role === "ADMIN" || "SUPER_ADMIN") {
+        console.debug("\n Decoded data ==> ", decoded)
+
+        if (decoded.role === "ADMIN" || decoded.role === "SUPER_ADMIN") {
             const admin = await Admin.findById(decoded.id)
             console.log("Admin found ==> ", admin)
             if (!admin) {
