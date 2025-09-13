@@ -1,4 +1,4 @@
-import { LensPackage } from "../models/lens-package.js"
+import { LensPackage } from "../models/frame-lens-package.js"
 
 class LensPackageClass {
     async createLensPackage(data: any) {

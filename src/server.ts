@@ -16,6 +16,7 @@ import { wishlistRouter } from "./routes/wishlist-routes.js"
 import { sunglassRouter } from "./routes/sunglass-routes.js"
 import { lensPackageRouter } from "./routes/lens-package-routes.js"
 import { authRouter } from "./routes/auth-routes.js"
+import { sunglassLensPackageRouter } from "./routes/sunglass-package-routes.js"
 
 //Configurations
 const app = express()
@@ -46,6 +47,7 @@ app.use("/api/v1/vendor-request", vendorRequestRoutes);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/sunglass", sunglassRouter);
 app.use("/api/v1/lens-package", lensPackageRouter);
+app.use("/api/v1/sun-lens-package", sunglassLensPackageRouter);
 //Error middlware
 const PORT = process.env.PORT || 8080
 

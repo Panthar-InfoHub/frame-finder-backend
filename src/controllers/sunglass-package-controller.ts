@@ -1,16 +1,16 @@
 import { NextFunction, Request, Response } from "express";
-import { LensPackageService } from "../services/lens-package-service.js";
-import { LensPackage } from "../models/frame-lens-package.js";
+import { SunglassLensPackageService } from "../services/sunglass-lens-package-service.js";
+import { SunglassLensPackage } from "../models/sunglass-lens-package.js";
 
 export const createLensPackage = async (req: Request, res: Response, next: NextFunction) => {
     try {
+
         console.debug("requested data for lens package creation  ==> ", req.body);
 
         const vendorId = req.user?.id;
         console.debug("Vendor Id for creating lens package  ==> ", req.user?.id);
 
-
-        const lensPackage = await LensPackageService.createLensPackage({ ...req.body, vendorId })
+        const lensPackage = await SunglassLensPackageService.createLensPackage({ ...req.body, vendorId })
         console.debug("\n lens package ==> ", lensPackage)
 
         res.status(201).send({
@@ -19,50 +19,50 @@ export const createLensPackage = async (req: Request, res: Response, next: NextF
             lensPackage: lensPackage
         });
         return;
+
     } catch (error) {
         console.error("Error creating lens package:", error);
         next(error);
         return;
     }
-}
+};
 
 export const updateLensPackage = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const lensPackageId = req.params.id;
         const updateData = req.body;
 
-        const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ? "" : req.user?.id
         //Authorized vendor check already done in auth middleware
+        const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ? "" : req.user?.id
 
         const query: any = { _id: lensPackageId }
         if (vendorId) {
             query.vendorId = vendorId
         }
-        const updatedLensPackage = await LensPackageService.updateLensPackage(query, updateData);
+        const updatedLensPackage = await SunglassLensPackageService.updateLensPackage(query, updateData);
 
         if (!updatedLensPackage) {
-            console.warn("\n Lens package not found or you do not have permission to update it")
+            console.warn("\n Sunglass Lens package not found or you do not have permission to update it")
             return res.status(404).json({
                 success: false,
-                message: "Lens package not found or you do not have permission to update it"
+                message: "Sunglass Lens package not found or you do not have permission to update it"
             });
         }
 
         console.debug("\n updated lens package ==> ", updatedLensPackage)
 
-        res.status(200).json({
+        res.status(200).send({
             success: true,
-            message: "Lens package updated successfully",
+            message: "Sunglass Lens package updated successfully",
             data: updatedLensPackage
         });
     } catch (error) {
-        console.error("Error updating lens package:", error);
+        console.error("Error updating sunglass lens package:", error);
         next(error);
         return;
     }
 };
 
-//Get all lens package all : for admin , limited by vendor Id
 export const getAllLensPackage = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
@@ -71,11 +71,10 @@ export const getAllLensPackage = async (req: Request, res: Response, next: NextF
         const packageCode = req.query.code as string
         const vendorId = req.query.vendorId as string
 
-        console.debug(`Gell all lens package params \nPage: ${page}, Limit: ${limit}, Package Code: ${packageCode}`);
+        console.debug(`Get all sunglass lens package params \nPage: ${page}, Limit: ${limit}, Package Code: ${packageCode}`);
 
         const skip = (page - 1) * limit;
 
-        // const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ?  : req.user?.id
         const query: any = {};
 
         //Assign package code if provided
@@ -103,16 +102,16 @@ export const getAllLensPackage = async (req: Request, res: Response, next: NextF
         console.debug("\nQuery for fetching lens packages ==>  ", query);
 
         const [lensPackages, total] = await Promise.all([
-            LensPackage.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).populate("vendorId", "business_name email phone business_owner"),
-            LensPackage.countDocuments(query)
+            SunglassLensPackage.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).populate("vendorId", "business_name email phone business_owner"),
+            SunglassLensPackage.countDocuments(query)
         ]);
 
-        console.debug("\nFetched lens packages ==> ", lensPackages);
-        console.debug("\nTotal lens packages count ==> ", total);
+        console.debug("\nFetched sunglass lens packages ==> ", lensPackages);
+        console.debug("\nTotal sunglass lens packages count ==> ", total);
 
         res.status(200).send({
             success: true,
-            message: "Lens packages fetched successfully",
+            message: "Sunglass lens packages fetched successfully",
             data: {
                 lensPackages,
                 pagination: {
@@ -129,9 +128,8 @@ export const getAllLensPackage = async (req: Request, res: Response, next: NextF
         next(error);
         return;
     }
-}
+};
 
-//Delete Lens Package
 export const deleteLensPackage = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
@@ -144,22 +142,22 @@ export const deleteLensPackage = async (req: Request, res: Response, next: NextF
         vendorId && (query.vendorId = vendorId)
         console.debug("\nQuery for fetching lens packages ==>  ", query);
 
-        const lensPackage = await LensPackage.findOneAndDelete(query)
+        const lensPackage = await SunglassLensPackage.findOneAndDelete(query)
 
         if (!lensPackage) {
-            console.warn(`Lens package with ID ${packageId} not found or not authorized to delete`);
+            console.warn(` Sunglass lens package with ID ${packageId} not found or not authorized to delete`);
             res.status(404).send({
                 success: false,
-                message: "Lens package not found"
+                message: "Sunglass lens package not found"
             });
             return;
         }
 
-        console.debug("\n Lens package deleted ==> ", lensPackage)
+        console.debug("\n Sunglass lens package deleted ==> ", lensPackage)
 
         res.status(200).send({
             success: true,
-            message: "Lens package deleted",
+            message: "Sunglass lens package deleted",
             data: lensPackage
         })
 
@@ -168,4 +166,4 @@ export const deleteLensPackage = async (req: Request, res: Response, next: NextF
         next(error);
         return;
     }
-}
+};

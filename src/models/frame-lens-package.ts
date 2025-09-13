@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { generateReadableProductCode } from "../lib/helper.js";
 
-const lensPackageSchema = new mongoose.Schema({
+export const baseLensPackageSchema = new mongoose.Schema({
     packageCode: {
         type: String,
         unique: true,
@@ -11,14 +11,6 @@ const lensPackageSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    packageImage: [
-        {
-            url: {
-                type: String,
-                trim: true
-            }
-        }
-    ],
     vendorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Vendor",
@@ -50,16 +42,29 @@ const lensPackageSchema = new mongoose.Schema({
             min: 0
         }
     },
+}, { timestamps: true });
+
+const lensPackageSchema = baseLensPackageSchema.clone();
+
+lensPackageSchema.add({
     packagePrice: {
         type: Number,
         required: true,
     },
+    packageImage: [
+        {
+            url: {
+                type: String,
+                trim: true
+            }
+        }
+    ],
     package_type: {
         type: String,
         required: true,
         trim: true
     },
-}, { timestamps: true })
+})
 
 lensPackageSchema.index({ vendorId: 1, package_design: 1, package_type: 1 })
 
