@@ -10,8 +10,11 @@ interface customError extends Error {
     value?: string;
     errors?: {
         [key: string]: {
-            message: string;
-        };
+            path?: string;
+            message?: string;
+            kind?: string;     // optional, e.g., 'enum', 'required'
+            value?: any;       // optional, the actual value that failed
+        }
     };
 }
 
@@ -21,6 +24,8 @@ export const errorHandler: ErrorRequestHandler = (err: customError, _req: Reques
     let statusCode = 500;
     let message = "Internal Server Error";
     let errorType = "ServerError";
+
+    console.error("Error name ==> ", err.name)
 
     // Handle MongoDB errors
     if (err.name === 'MongoServerError') {
@@ -35,7 +40,9 @@ export const errorHandler: ErrorRequestHandler = (err: customError, _req: Reques
     // Handle Mongoose validation errors
     if (err.name === 'ValidationError') {
         statusCode = 400;
-        message = Object.values(err.errors || []).map(val => val.message).join(', ');
+        message = Object.values(err.errors || {})
+            .map(val => `${val.path}: ${val.message}`)
+            .join(", ");
         errorType = "ValidationError";
     }
 

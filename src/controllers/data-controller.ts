@@ -8,6 +8,7 @@ export const getFrameData = async (req: Request, res: Response, next: NextFuncti
 
         const vendorId = new mongoose.Types.ObjectId(req.user?.id)
 
+
         const matchFields = ["material", "shape", "style"]
         const result = await Miscellaneous.aggregate([
             { $match: { type: { $in: matchFields } } }, //Filter with type in misc module
@@ -18,12 +19,12 @@ export const getFrameData = async (req: Request, res: Response, next: NextFuncti
             // Union with Vendor Misc pipeline 
             {
                 $unionWith: {
-                    coll: "VendorMisc",
+                    coll: "vendormiscs",
                     pipeline: [
                         {
                             $match: {
                                 type: { $in: matchFields },
-                                vendor: vendorId
+                                vendorId
                             }
                         },
                         { $unwind: "$values" },

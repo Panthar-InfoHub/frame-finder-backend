@@ -17,6 +17,7 @@ import { sunglassRouter } from "./routes/sunglass-routes.js"
 import { lensPackageRouter } from "./routes/lens-package-routes.js"
 import { authRouter } from "./routes/auth-routes.js"
 import { sunglassLensPackageRouter } from "./routes/sunglass-package-routes.js"
+import { errorHandler } from "./middlwares/ErrorMiddleware.js"
 
 //Configurations
 const app = express()
@@ -55,6 +56,8 @@ const PORT = process.env.PORT || 8080
 app.get("/ping", (req, res) => {
     res.status(200).send({ message: "server is running....." })
 })
+
+app.use(errorHandler)
 
 connectDB()
 app.listen(PORT, () => {

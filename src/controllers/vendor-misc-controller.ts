@@ -83,7 +83,7 @@ export const removeValue = async (req: Request, res: Response, next: NextFunctio
         }
 
         const vendorMisc = await VendorMisc.findOneAndUpdate(
-            { vendor: vendorId, type },
+            { vendorId: vendorId, type },
             { $pull: { values: { value } } },
             { new: true }
         );
@@ -122,8 +122,8 @@ export const getVendorMiscValuesByVendor = async (req: Request, res: Response, n
         }
 
         const vendorMisc = await VendorMisc
-            .findOne({ vendor: vendorId, type })
-            .populate("vendor", "business_name , business_owner, email, phone")
+            .findOne({ vendorId: vendorId, type })
+            .populate("vendorId", "business_name , business_owner, email, phone")
             .lean();
 
         if (!vendorMisc) {
