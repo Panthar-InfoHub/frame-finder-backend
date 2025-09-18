@@ -66,6 +66,7 @@ app.get("/test-error", (req, res) => {
 app.use(errorHandler)
 
 connectDB()
+// this is only to test the pull request
 app.listen(PORT, () => {
     console.log(`\nBackend server is started... \n PORT ==> ${PORT}`)
 })
