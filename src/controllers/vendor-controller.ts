@@ -5,26 +5,8 @@ import { generateTokens } from "../lib/uitils.js";
 
 export const createVendor = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        console.debug("\nCreating vendor with data: ", req.body);
-        const vendor = await VendorService.createVendor(req.body)
+        
 
-        console.debug("\nVendor created successfully: ", vendor);
-
-        const { accessToken } = generateTokens({ email: vendor.email, id: vendor._id, role: vendor.role })
-        const vendorRes = vendor.toObject();
-        delete vendorRes.password;
-
-        console.debug("Login token generated ==>", accessToken);
-
-        res.status(201).send({
-            success: true,
-            message: "Vendor created successfully",
-            data: {
-                user: vendorRes,
-                accessToken: accessToken
-            }
-        })
-        return;
 
     } catch (error) {
         console.error("\nError creating vendor: ", error);
@@ -84,7 +66,7 @@ export const getVendorById = async (req: Request, res: Response, next: NextFunct
         const vendorId = req.params.id;
         console.debug(`Fetching vendor with ID: ${vendorId}`);
 
-        const vendor = await Vendor.findById(vendorId);
+        const vendor = await Vendor.findById(vendorId).select("-password").lean();
 
         if (!vendor) {
             console.warn(`Vendor with ID ${vendorId} not found`);
@@ -94,6 +76,7 @@ export const getVendorById = async (req: Request, res: Response, next: NextFunct
             });
             return;
         }
+
         console.debug("Fetched vendor ==> ", vendor);
         res.status(200).send({
             success: true,

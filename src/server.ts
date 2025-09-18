@@ -18,6 +18,7 @@ import { lensPackageRouter } from "./routes/lens-package-routes.js"
 import { authRouter } from "./routes/auth-routes.js"
 import { sunglassLensPackageRouter } from "./routes/sunglass-package-routes.js"
 import { errorHandler } from "./middlwares/ErrorMiddleware.js"
+import AppError from "./middlwares/Error.js"
 
 //Configurations
 const app = express()
@@ -55,6 +56,11 @@ const PORT = process.env.PORT || 8080
 //Health check
 app.get("/ping", (req, res) => {
     res.status(200).send({ message: "server is running....." })
+})
+
+app.get("/test-error", (req, res) => {
+    throw new AppError("this is a test error", 500);
+    // res.status(200).send({ message: "server is running....." })
 })
 
 app.use(errorHandler)

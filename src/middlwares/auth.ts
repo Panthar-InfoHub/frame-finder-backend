@@ -4,6 +4,7 @@ import { Admin } from "../models/Admin.js";
 import { NextFunction, Request, Response } from "express";
 import { UserRole } from "./roleCheck.js";
 import { Vendor } from "../models/Vendor.js";
+import AppError from "./Error.js";
 
 interface resData {
     id: string,
@@ -30,32 +31,25 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
 
         console.debug("\n Decoded data ==> ", decoded)
 
+       let user; // This will hold either an Admin or a Vendor document
+
         if (decoded.role === "ADMIN" || decoded.role === "SUPER_ADMIN") {
-            const admin = await Admin.findById(decoded.id)
-            console.log("Admin found ==> ", admin)
-            if (!admin) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Admin not found'
-                });
-            }
-            resData.id = admin._id.toString();
-            resData.email = admin._email;
-            resData.role = admin.role
+            user = await Admin.findById(decoded.id);
+        } else if (decoded.role === "VENDOR") {
+            user = await Vendor.findById(decoded.id);
+        } else {
+            throw new AppError('Unsupported user role in token.', 401);
         }
 
-        if (decoded.role === "VENDOR") {
-            const vendor = await Vendor.findById(decoded.id)
-            if (!vendor) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Vendor not found in auth middleware'
-                });
-            }
-            resData.id = vendor._id.toString();
-            resData.email = vendor.email;
-            resData.role = vendor.role
+        if (!user) {
+            throw new AppError('The user belonging to this token no longer exists.', 401);
         }
+
+        resData.id = user._id.toString();
+        resData.email = user.email;
+        resData.role = user.role;
+
+        console.debug("User data from token ==> ", resData)
 
         // const  = await UserRepository.findById(decoded.id); --> For user
 
