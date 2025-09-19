@@ -17,16 +17,7 @@ export const baseProductSchema = new mongoose.Schema({
         required: [true, 'Product description is required'],
         trim: true
     },
-    images: [
-        {
-            url: {
-                type: String,
-                trim: true
-            }
-        }
-    ],
-    frame_color: [String],
-    temple_color: [String],
+
     material: [String],
     shape: [String],
     style: [String],
@@ -34,11 +25,6 @@ export const baseProductSchema = new mongoose.Schema({
         type: String,
         required: [true, "HSN Code is required, cannot be empty!!"],
         trim: true
-    },
-    price: {
-        type: Number,
-        required: [true, 'Product price is required'],
-        min: [0, 'Product price must be positive'],
     },
     sizes: [{
         type: String,
@@ -73,11 +59,6 @@ export const baseProductSchema = new mongoose.Schema({
             min: 0
         }
     },
-    // categoryId: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "Category",
-    //     required: [true, 'Product category is required']
-    // },
     vendorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Vendor",
@@ -108,6 +89,20 @@ baseProductSchema.index({
 
 
 const productSchema = baseProductSchema.clone();
+
+productSchema.add({
+    variants: [{
+        frame_color: [String],
+        temple_color: [String],
+        price: {
+            base_price: { type: Number, required: true },
+            mrp: { type: Number, required: true },
+        },
+        images: [
+            { url: { type: String, trim: true } }
+        ],
+    }]
+})
 
 // Generate product ID before saving
 productSchema.pre('validate', async function (next) {

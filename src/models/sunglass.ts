@@ -6,14 +6,17 @@ interface ISunglass extends Document {
     productCode: string;
     brand_name: string;
     desc: string;
-    images: Array<{ url: string }>;
-    frame_color: string[];
-    temple_color: string[];
+    variants: Array<{
+        frame_color: string[];
+        temple_color: string[];
+        lens_color: string[];
+        price: number;
+        images: Array<{ url: string }>;
+    }>;
     material: string[];
     shape: string[];
     style: string[];
     hsn_code: string;
-    price: number;
     sizes: ('S' | 'M' | 'L' | 'XL')[];
     gender: ('male' | 'female' | 'kids' | 'unisex')[];
     stock: {
@@ -25,10 +28,7 @@ interface ISunglass extends Document {
     vendorId: mongoose.Types.ObjectId;
     rating: number;
     status: 'active' | 'inactive' | 'pending';
-    // Sunglass-specific fields
     is_Power: boolean;
-    lens_color: string[];
-    // Timestamps
     createdAt: Date;
     updatedAt: Date;
     type: string
@@ -46,9 +46,18 @@ sunglassSchema.add({
         type: String,
         default: "sunglass"
     },
-    lens_color: {
-        type: [String]
-    }
+    variants: [{
+        frame_color: [String],
+        temple_color: [String],
+        lens_color: [String],
+        price: {
+            base_price: { type: Number, required: true },
+            mrp: { type: Number, required: true },
+        },
+        images: [
+            { url: { type: String, trim: true } }
+        ],
+    }]
 })
 
 // Generate product ID before saving

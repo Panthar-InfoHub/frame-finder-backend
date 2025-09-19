@@ -1,12 +1,29 @@
+import { generateTokens } from "../lib/uitils.js";
+import AppError from "../middlwares/Error.js";
 import { Vendor } from "../models/Vendor.js";
 
 class VendorClass {
-    async createVendor(vendorData: any) {
-        try {
-            return await Vendor.create(vendorData)
-        } catch (error) {
-            console.error("\nError creating vendor: ", error);
-            throw error;
+    async completeRegistration(phone: string, vendorData: any) {
+        const vendor = await Vendor.findOne({ phone, isActive: false, 'phoneVerification.isVerified': true })
+
+        if (!vendor) {
+            console.warn(`Vendor with phone ${phone} is not verified or already active.`);
+            throw new AppError("Venddor already verified or phone number not verified.", 409);
+        }
+
+        Object.assign(vendor, vendorData);
+        vendor.isActive = true;
+        const updatedVendor = await vendor.save();
+        console.debug("\n Updated vendor ==> ", updatedVendor);
+
+        const token = generateTokens({ id: updatedVendor._id.toString(), email: updatedVendor.email!, role: updatedVendor.role });
+        console.debug("\n Generated token for vendor ==> ", token);
+
+        return {
+            business_name: updatedVendor.business_name,
+            email: updatedVendor.email,
+            phone: updatedVendor.phone,
+            token
         }
     }
 }

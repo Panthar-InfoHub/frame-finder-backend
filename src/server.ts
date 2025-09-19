@@ -19,6 +19,8 @@ import { authRouter } from "./routes/auth-routes.js"
 import { sunglassLensPackageRouter } from "./routes/sunglass-package-routes.js"
 import { errorHandler } from "./middlwares/ErrorMiddleware.js"
 import AppError from "./middlwares/Error.js"
+import { accessoriesRouter } from "./routes/accessories-route.js"
+import { contactLensRouter } from "./routes/contact-lens-route.js"
 
 //Configurations
 const app = express()
@@ -48,6 +50,8 @@ app.use("/api/v1/vendor-request", vendorRequestRoutes);
 //Products Api Routes
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/sunglass", sunglassRouter);
+app.use("/api/v1/contact-lens", contactLensRouter);
+app.use("/api/v1/accessories", accessoriesRouter);
 app.use("/api/v1/lens-package", lensPackageRouter);
 app.use("/api/v1/sun-lens-package", sunglassLensPackageRouter);
 //Error middlware
@@ -60,12 +64,12 @@ app.get("/ping", (req, res) => {
 
 app.get("/test-error", (req, res) => {
     throw new AppError("this is a test error", 500);
-    // res.status(200).send({ message: "server is running....." })
 })
 
 app.use(errorHandler)
 
 connectDB()
+// this is only to test the pull request
 app.listen(PORT, () => {
     console.log(`\nBackend server is started... \n PORT ==> ${PORT}`)
 })

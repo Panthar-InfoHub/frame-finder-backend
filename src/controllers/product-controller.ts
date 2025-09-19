@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Product } from "../models/products.js";
 import { startSession } from "mongoose";
+import AppError from "../middlwares/Error.js";
 
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -12,8 +13,13 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
 
         if (!productData || Object.keys(productData).length === 0) {
             console.warn("No product data provided");
-            res.status(400).send({ message: "Product data is required" });
-            return;
+            throw new AppError("Product data is required", 400);
+        }
+
+        if (!["SUPER_ADMIN", "ADMIN"].includes(req?.user?.role || "")) {
+            if (req.user && req.user.id) {
+                productData.vendorId = req.user.id;
+            }
         }
 
         console.debug("\nProduct data received for creation ==> ", productData);
@@ -22,8 +28,8 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
 
         if (!product) {
             console.warn("Product creation failed");
-            res.status(500).send({ message: "Failed to create product" });
-            return;
+            await session.abortTransaction();
+            throw new AppError("Failed to create product", 500);
         }
 
         console.debug("\nProduct created successfully: ", product);
@@ -208,7 +214,6 @@ export const getProductById = async (req: Request, res: Response, next: NextFunc
 
         const product = await Product
             .findById(productId)
-            .populate("categoryId", "name")
             .populate("vendorId", "business_name email phone")
 
         if (!product || product.status === 'inactive') {

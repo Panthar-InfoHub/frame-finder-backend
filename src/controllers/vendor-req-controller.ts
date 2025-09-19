@@ -87,18 +87,7 @@ export const updateRequestStatus = async (req: Request, res: Response, next: Nex
 
         console.debug("\nUpdated vendor request ==> ", updatedRes)
 
-        if (status === "accepted") {
-            console.debug("Vendor request accepted and creating vendor...");
-            const vendor = await VendorService.createVendor({
-                business_name: updatedRes.business_name,
-                business_owner: updatedRes.full_name,
-                email: updatedRes.email,
-                phone: updatedRes.phone_number,
-                gst_number: updatedRes.gst_number,
-                address: updatedRes.address,
-            })
-            console.debug("Vendor created successfully from request ====> ", vendor);
-        }
+        
 
         res.status(200).send({
             success: true,

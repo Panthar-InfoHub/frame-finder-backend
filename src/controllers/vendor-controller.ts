@@ -1,12 +1,21 @@
 import { NextFunction, Request, Response } from "express";
-import { VendorService } from "../services/vendor-service.js";
 import { Vendor } from "../models/Vendor.js";
-import { generateTokens } from "../lib/uitils.js";
+import { VendorService } from "../services/vendor-service.js";
 
 export const createVendor = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        
+        const { phone, ...vendorData } = req.body;
+        console.debug("\nCreating vendor with data: ", vendorData);
 
+        const result = await VendorService.completeRegistration(phone, vendorData);
+        console.debug("\nVendor created successfully: ", result);
+
+        res.status(201).send({
+            success: true,
+            message: "Vendor created successfully",
+            data: result
+        });
+        return;
 
     } catch (error) {
         console.error("\nError creating vendor: ", error);
@@ -112,7 +121,7 @@ export const deleteVendor = async (req: Request, res: Response, next: NextFuncti
         res.status(204).send({
             success: true,
             message: "Vendor deleted successfully",
-            data: vendor
+            data: vendor._id
         });
         return;
 

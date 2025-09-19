@@ -25,12 +25,12 @@ productRouter.put("/:id/stock", [
 
 //get all products
 productRouter.get("/", [
-    auth,
+    // auth,
 ], getAllProducts)
 
 //get product by id
 productRouter.get("/:id", [
-    auth,
+    // auth,
 ], getProductById)
 
 //delete product

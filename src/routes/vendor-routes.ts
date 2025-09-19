@@ -25,7 +25,7 @@ vendorRouter.get("/:id", [
 //Update Vendor
 vendorRouter.put("/:id", [
     auth,
-    isSuperAdmin
+    isVendor
 ], updateVendor)
 
 //Delete Vendor
