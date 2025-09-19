@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { SunglassLensPackageService } from "../services/sunglass-lens-package-service.js";
 import { SunglassLensPackage } from "../models/sunglass-lens-package.js";
+import AppError from "../middlwares/Error.js";
 
 export const createLensPackage = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -167,3 +168,31 @@ export const deleteLensPackage = async (req: Request, res: Response, next: NextF
         return;
     }
 };
+
+export const getSunGlassLensPackagebyID = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const lensPkgId = req.params.id;
+        console.debug("\n Sunglass Lens package id for searching ==> ", lensPkgId);
+
+        const lensPkg = await SunglassLensPackage.findById(lensPkgId).populate("vendorId", "business_name email phone logo");
+
+        if (!lensPkg) {
+            console.warn("Sunglass Lens Package not found");
+            throw new AppError("Sunglass Lens package not found", 404);
+        }
+
+        console.debug("Sunglass Lens package found ==> ", lensPkg)
+        res.status(200).send({
+            success: true,
+            message: 'Sunglass Lens Package fetched successfully',
+            data: lensPkg
+        })
+        return;
+
+    } catch (error) {
+        console.error("Error while fetching sunglasses by id ==> ", error);
+        next(error);
+        return;
+    }
+}

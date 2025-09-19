@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { LensPackageService } from "../services/lens-package-service.js";
 import { LensPackage } from "../models/frame-lens-package.js";
+import AppError from "../middlwares/Error.js";
 
 export const createLensPackage = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -61,6 +62,34 @@ export const updateLensPackage = async (req: Request, res: Response, next: NextF
         return;
     }
 };
+
+export const getLensPackagebyID = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const lensPkgId = req.params.id;
+        console.debug("\n Lens package id for searching ==> ", lensPkgId);
+
+        const lensPkg = await LensPackage.findById(lensPkgId).populate("vendorId", "business_name email phone logo");
+
+        if (!lensPkg) {
+            console.warn("Lens Package not found");
+            throw new AppError("Lens package not found", 404);
+        }
+
+        console.debug("Lens package found ==> ", lensPkg)
+        res.status(200).send({
+            success: true,
+            message: 'Lens Package fetched successfully',
+            data: lensPkg
+        })
+        return;
+
+    } catch (error) {
+        console.error("Error while fetching sunglasses by id ==> ", error);
+        next(error);
+        return;
+    }
+}
 
 //Get all lens package all : for admin , limited by vendor Id
 export const getAllLensPackage = async (req: Request, res: Response, next: NextFunction) => {

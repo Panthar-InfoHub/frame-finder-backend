@@ -47,11 +47,8 @@ export const baseLensPackageSchema = new mongoose.Schema({
 const lensPackageSchema = baseLensPackageSchema.clone();
 
 lensPackageSchema.add({
-    packagePrice: {
-        type: Number,
-        required: true,
-    },
-    packageImage: [
+    price: { type: Number, required: true, },
+    images: [
         {
             url: {
                 type: String,
@@ -59,11 +56,7 @@ lensPackageSchema.add({
             }
         }
     ],
-    package_type: {
-        type: String,
-        required: true,
-        trim: true
-    },
+    package_type: { type: String, required: true, trim: true },
 })
 
 lensPackageSchema.index({ vendorId: 1, package_design: 1, package_type: 1 })

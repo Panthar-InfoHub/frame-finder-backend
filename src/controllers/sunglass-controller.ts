@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { startSession } from "mongoose";
 import { Sunglass } from "../models/sunglass.js";
+import AppError from "../middlwares/Error.js";
 
 export const createSunglass = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -12,8 +13,13 @@ export const createSunglass = async (req: Request, res: Response, next: NextFunc
 
         if (!SunglassData || Object.keys(SunglassData).length === 0) {
             console.warn("No Sunglass data provided");
-            res.status(400).send({ message: "Sunglass data is required" });
-            return;
+            throw new AppError("Sunglass data is required", 400)
+        }
+
+        if (!["SUPER_ADMIN", "ADMIN"].includes(req?.user?.role || "")) {
+            if (req.user && req.user.id) {
+                SunglassData.vendorId = req.user.id;
+            }
         }
 
         console.debug("\nSunglass data received for creation ==> ", SunglassData);
@@ -22,8 +28,8 @@ export const createSunglass = async (req: Request, res: Response, next: NextFunc
 
         if (!sunglass) {
             console.warn("Sunglass creation failed");
-            res.status(500).send({ message: "Failed to create Sunglass" });
-            return;
+            await session.abortTransaction();
+            throw new AppError("Failed to create sunglass", 500);
         }
 
         console.debug("\nSunglass created successfully: ", sunglass);

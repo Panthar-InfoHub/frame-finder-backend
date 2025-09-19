@@ -3,6 +3,7 @@ import mongoose, { Document } from "mongoose";
 import AppError from "../middlwares/Error.js";
 
 interface IVendor extends Document {
+    _id: mongoose.Types.ObjectId;
     business_name?: string;
     business_owner?: string;
     address?: {
@@ -25,6 +26,12 @@ interface IVendor extends Document {
         otpExpires?: Date;
         isVerified: boolean;
     };
+    bank_details?:{
+        account_holder_name?: string;
+        account_number?: string;
+        ifsc_code?: string;
+    }
+    categories?:[string];
 }
 
 
@@ -104,7 +111,13 @@ const vendorSchema = new mongoose.Schema<IVendor, vendorSchemaType>({
             isVerified: { type: Boolean, default: false }
         },
         select: false
-    }
+    },
+    bank_details:{
+        account_holder_name: { type: String, trim: true },
+        account_number: { type: String, trim: true },
+        ifsc_code: { type: String, trim: true },
+    },
+    categories:[String]
 
 }, { timestamps: true });
 

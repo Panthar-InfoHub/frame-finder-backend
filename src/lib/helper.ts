@@ -13,9 +13,8 @@ export const generatePassword = (type: string): string => {
 };
 
 export function generateReadableProductCode(prefix: string): string {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8); 
+    const timestamp = Date.now().toString(36).slice(-5);
+    const random = Math.random().toString(36).substring(2, 5); 
     
-    return `${prefix}${timestamp}${random}`.toUpperCase();
-    // Example: FRA1A2B3C4D5E6F7G8H9 
+    return `${prefix}-${timestamp}${random}`.toUpperCase(); // e.g., FRM-1A2B3
 }

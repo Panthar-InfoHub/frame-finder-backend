@@ -1,14 +1,16 @@
 import { Router } from "express";
 import { auth } from "../middlwares/auth.js";
 import { isVendor } from "../middlwares/roleCheck.js";
-import { getAllLensPackage, createLensPackage, deleteLensPackage, updateLensPackage } from "../controllers/sunglass-package-controller.js";
+import { getAllLensPackage, createLensPackage, deleteLensPackage, updateLensPackage, getSunGlassLensPackagebyID } from "../controllers/sunglass-package-controller.js";
 
 export const sunglassLensPackageRouter = Router();
 
 //public route
 sunglassLensPackageRouter.get("/", [
-    auth
+    // auth
 ], getAllLensPackage)
+
+sunglassLensPackageRouter.get("/:id" , getSunGlassLensPackagebyID)
 
 // Private Routes
 sunglassLensPackageRouter.post("/", [auth, isVendor], createLensPackage)
