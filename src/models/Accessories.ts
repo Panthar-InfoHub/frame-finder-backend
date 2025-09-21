@@ -11,6 +11,7 @@ accessories.remove('gender')
 
 //Add images to base schema 
 accessories.add({
+    type: { type: String, default: "Accessories" },
     images: [
         { url: { type: String, trim: true } }
     ],

@@ -11,6 +11,7 @@ contactLensSchema.remove("sizes")
 contactLensSchema.remove("gender")
 
 contactLensSchema.add({
+    type: { type: String, default: "ContactLens" },
     exp_date: { type: Date, required: [true, "Expiry Date required for contact lens "] },
     contact_lens_cover: { type: Boolean },
     price: {

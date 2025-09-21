@@ -15,12 +15,12 @@ wishlistRouter.put("/remove", [
 ], removeItemInWishlist);
 
 //Get all items in wishlist of a user
-wishlistRouter.get("/:id", [
+wishlistRouter.get("/", [
     auth,
 ], findWishlistByUser);
 
 //Clear wishlist of a user
-wishlistRouter.put("/clear/:id", [
+wishlistRouter.put("/clear", [
     auth,
 ], clearWishlistofUser);
 

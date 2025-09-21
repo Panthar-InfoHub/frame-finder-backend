@@ -42,10 +42,7 @@ sunglassSchema.add({
         type: Boolean,
         default: false
     },
-    type: {
-        type: String,
-        default: "sunglass"
-    },
+    type: { type: String, default: "Sunglass" },
     variants: [{
         frame_color: [String],
         temple_color: [String],

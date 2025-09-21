@@ -1,47 +1,28 @@
 import { NextFunction, Request, Response } from "express";
-import { WishList } from "../models/Wishlist.js";
+import { wishlistService } from "../services/wishlist-service.js";
 
 export const addItemInWishlist = async (req: Request, res: Response, next: NextFunction) => {
+
     try {
 
         console.debug("\nAdding item to wishlist...");
 
-        const { userId, item } = req.body;
+        const { item } = req.body;
+        const userId = req.user?.id!
         console.debug("User ID for adding item in wishlist:", userId);
         console.debug("\nItem to add:", item);
 
-        if (!userId || !item) {
-            console.warn("User ID or item are required to add to wishlist");
-            return res.status(400).send({ success: false, message: "Missing user ID or item" });
-        }
-
         // if (!req.user || userId !== req.user.id) {
         //     console.warn("User ID does not match authenticated user");
-        //     return res.status(403).send({ success: false, message: "User ID does not match authenticated user" });
+        //     throw new AppError("User ID does not match authenticated user", 403)
         // }
+        //Product Validity check - Optional for future engineer
 
-        const exists = await WishList.exists({
-            userId,
-            "items.productId": item.productId
-        });
+        const result = await wishlistService.addItemToWishlist(userId, item);
+        const statusCode = result.message.includes("updated") ? 200 : 201;
 
-        if (exists) {
-            console.warn("Item already exists in wishlist");
-            return res.status(409).send({
-                success: false,
-                message: "Item already exists in wishlist"
-            });
-        }
-
-        const updateList = await WishList.findOneAndUpdate(
-            { userId },
-            { $addToSet: { items: item } },
-            { new: true, upsert: true }
-        )
-
-
-        console.debug("Item added to wishlist successfully ==> ", updateList);
-        return res.status(200).send({ success: true, message: "Item added to wishlist successfully", data: updateList });
+        console.debug("Item added to wishlist successfully ==> ", result);
+        return res.status(statusCode).send(result);
 
     } catch (error) {
         console.error("Error adding item to wishlist:", error);
@@ -55,32 +36,13 @@ export const removeItemInWishlist = async (req: Request, res: Response, next: Ne
 
         console.debug("\nRemoving item from wishlist...");
 
-        const { userId, productId } = req.body;
+        const { itemId } = req.body;
+        const userId = req.user?.id!;
         console.debug("User ID for removing item in wishlist:", userId);
-        console.debug("\nItem to remove:", productId);
+        console.debug("\nItem to remove:", itemId);
 
-        if (!userId || !productId) {
-            console.warn("User ID or product ID are required to remove from wishlist");
-            return res.status(400).send({ success: false, message: "Missing user ID or product ID" });
-        }
-
-
-        const updateList = await WishList.findOneAndUpdate(
-            { userId, "items.productId": productId },
-            { $pull: { items: { productId } } },
-            { new: true }
-        )
-
-        if (!updateList) {
-            console.warn("Item not found in wishlist");
-            return res.status(404).send({
-                success: false,
-                message: "Item not found in wishlist"
-            });
-        }
-
-        console.debug("Item removed from wishlist successfully ==> ", updateList);
-        return res.status(200).send({ success: true, message: "Item removed from wishlist successfully", data: updateList });
+        const result = await wishlistService.removeItemFromWishlist(userId, itemId);
+        return res.status(200).send(result);
 
     } catch (error) {
         console.error("Error adding item to wishlist:", error);
@@ -91,31 +53,15 @@ export const removeItemInWishlist = async (req: Request, res: Response, next: Ne
 
 export const findWishlistByUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const userId = req.user?.id!;
+        console.debug(`\n getting the wishlist of user ==> ${userId}`)
 
-        const userId = req.params.id;
-        console.debug("User ID for finding wishlist:", userId);
-
-        if (!userId) {
-            console.warn("User ID is required to find wishlist");
-            return res.status(400).send({ success: false, message: "Missing user ID" });
-        }
-
-        const wishlist = await WishList.findOne({ userId }).populate({
-            path: "items.productId",
-            match: { status: { $nin: ['inactive', 'pending'] } },
-            select: "name images price"
-        }).lean();
-
-        if (!wishlist) {
-            console.warn("Wishlist not found");
-            return res.status(404).send({
-                success: false,
-                message: "Wishlist not found"
-            });
-        }
-
-        console.debug("Wishlist found successfully ==> ", wishlist);
-        return res.status(200).send({ success: true, message: "Wishlist found successfully", data: wishlist });
+        const result = await wishlistService.getWishlistByUser(userId);
+        return res.status(200).send({
+            success: true,
+            message: "Wishlist found",
+            data: result
+        });
 
     } catch (error) {
         console.error("Error finding wishlist by user:", error);
@@ -128,30 +74,11 @@ export const clearWishlistofUser = async (req: Request, res: Response, next: Nex
     try {
 
         console.debug("\nClearing wishlist...");
-        const userId = req.params.id;
+        const userId = req.user?.id!;
         console.debug("User ID for clearing wishlist:", userId);
 
-        if (!userId) {
-            console.warn("User ID is required to clear wishlist");
-            return res.status(400).send({ success: false, message: "Missing user ID" });
-        }
-
-        const result = await WishList.findOneAndUpdate(
-            { userId },
-            { $set: { items: [] } },
-            { new: true }
-        );
-
-        if (!result) {
-            console.warn("Wishlist not found");
-            return res.status(404).send({
-                success: false,
-                message: "Wishlist of user not found"
-            });
-        }
-
-        console.debug("Wishlist cleared successfully ==> ", result);
-        return res.status(200).send({ success: true, message: "Wishlist cleared successfully", data: result });
+        const result = await wishlistService.clearWishlist(userId);
+        return res.status(200).send(result);
 
     } catch (error) {
         console.error("Error clearing wishlist:", error);

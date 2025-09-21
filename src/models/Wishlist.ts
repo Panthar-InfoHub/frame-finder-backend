@@ -1,50 +1,47 @@
 import mongoose from "mongoose";
 
 const itemSchema = new mongoose.Schema({
-    productId: {
+    product: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-        required: [true, "Product ID is required"]
+        required: [true, "Product ID is required"],
+        refPath: 'onModel'
+    },
+    onModel: {
+        type: String,
+        required: true,
+        enum: ['Sunglass', 'Product', 'ContactLens', 'Accessories']
+    },
+
+    variant: {
+        type: mongoose.Schema.Types.ObjectId,
     },
     quantity: {
         type: Number,
         default: 1
     },
-    is_prescription: {
-        type: Boolean,
-        default: false
-    },
-    lens_type: {
-        type: String,
-        trim: true,
-    },
     prescription: {
-        type: mongoose.Schema.Types.Mixed,
-        required: function (this: any) {
-            return this.is_prescription;
-        }
+        type: mongoose.Schema.Types.Mixed
     },
-    lens: {
-        type: String,
-        trim: true
-    },
-    saved_at: {
-        type: Date,
-        default: Date.now
-    },
-    refund: {
-        type: Boolean,
-        default: false
+    lens_package_detail: {
+        package_type: { type: String },
+        package_design: { type: String },
+        package_price: { type: Number }
     }
-}, { _id: false })
+
+}, { timestamps: true })
 
 const wishListSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required:[true , "User ID is required"]
+        required: [true, "User ID is required"]
     },
-    items: [itemSchema]
+    items: [itemSchema],
+
+    subTotal: {
+        type: Number,
+        required: true
+    }
 }, { timestamps: true });
 
 export const WishList = mongoose.model("WishList", wishListSchema);
