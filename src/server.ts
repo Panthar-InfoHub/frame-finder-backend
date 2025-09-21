@@ -4,23 +4,25 @@ import dotenv from "dotenv"
 import express from "express"
 import morgan from "morgan"
 import { connectDB } from "./lib/ConnectDB.js"
+import AppError from "./middlwares/Error.js"
+import { errorHandler } from "./middlwares/ErrorMiddleware.js"
+import { accessoriesRouter } from "./routes/accessories-route.js"
 import { adminRoutes } from "./routes/admin-routes.js"
+import { authRouter } from "./routes/auth-routes.js"
 import { categoryRouter } from "./routes/category-routes.js"
+import { contactLensRouter } from "./routes/contact-lens-route.js"
 import { dataRouter } from "./routes/data-routes.js"
+import { lensPackageRouter } from "./routes/lens-package-routes.js"
 import { miscRouter } from "./routes/misc-routes.js"
 import { productRouter } from "./routes/product-routes.js"
+import { sunglassLensPackageRouter } from "./routes/sunglass-package-routes.js"
+import { sunglassRouter } from "./routes/sunglass-routes.js"
 import { vendorMiscRouter } from "./routes/vendor-misc-routes.js"
 import { vendorRouter } from "./routes/vendor-routes.js"
 import { vendorRequestRoutes } from "./routes/vendor_request.js"
 import { wishlistRouter } from "./routes/wishlist-routes.js"
-import { sunglassRouter } from "./routes/sunglass-routes.js"
-import { lensPackageRouter } from "./routes/lens-package-routes.js"
-import { authRouter } from "./routes/auth-routes.js"
-import { sunglassLensPackageRouter } from "./routes/sunglass-package-routes.js"
-import { errorHandler } from "./middlwares/ErrorMiddleware.js"
-import AppError from "./middlwares/Error.js"
-import { accessoriesRouter } from "./routes/accessories-route.js"
-import { contactLensRouter } from "./routes/contact-lens-route.js"
+import { vendorAnalyticRouter } from "./routes/vendor-analytics-route.js"
+import { orderRouter } from "./routes/order-routes.js"
 
 //Configurations
 const app = express()
@@ -41,11 +43,14 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/misc", miscRouter);
 app.use("/api/v1/data", dataRouter);
 app.use("/api/v1/admin", adminRoutes);
-app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/vendor", vendorRouter);
-app.use("/api/v1/vendor-misc", vendorMiscRouter);
 app.use("/api/v1/wishlist", wishlistRouter);
+app.use("/api/v1/category", categoryRouter);
+app.use("/api/v1/vendor-misc", vendorMiscRouter);
 app.use("/api/v1/vendor-request", vendorRequestRoutes);
+
+//Order Routes
+app.use("/api/v1/order", orderRouter);
 
 //Products Api Routes
 app.use("/api/v1/products", productRouter);
@@ -54,8 +59,11 @@ app.use("/api/v1/contact-lens", contactLensRouter);
 app.use("/api/v1/accessories", accessoriesRouter);
 app.use("/api/v1/lens-package", lensPackageRouter);
 app.use("/api/v1/sun-lens-package", sunglassLensPackageRouter);
-//Error middlware
-const PORT = process.env.PORT || 8080
+
+//Analytics
+app.use("/api/v1/vendor-analytics", vendorAnalyticRouter);
+
+
 
 //Health check
 app.get("/ping", (req, res) => {
@@ -66,7 +74,12 @@ app.get("/test-error", (req, res) => {
     throw new AppError("this is a test error", 500);
 })
 
+//Error middlware
 app.use(errorHandler)
+
+
+const PORT = process.env.PORT || 8080
+
 
 connectDB()
 // this is only to test the pull request

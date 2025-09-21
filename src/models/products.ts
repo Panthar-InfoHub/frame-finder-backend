@@ -91,6 +91,7 @@ baseProductSchema.index({
 const productSchema = baseProductSchema.clone();
 
 productSchema.add({
+    type: { type: String, default: "Product" },
     variants: [{
         frame_color: [String],
         temple_color: [String],
