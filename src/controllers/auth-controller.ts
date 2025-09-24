@@ -150,18 +150,65 @@ export const sendOtp = async (req: Request, res: Response, next: NextFunction) =
         return;
     }
 }
+
+export const userPhoneVerified = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const { phone } = req.body;
+        const vendor = await Vendor.findOne({ phone })
+        console.debug("\n Vendor ==> ", vendor)
+        if (!vendor) {
+            console.warn("Vendor with phone number not found ==> ", phone)
+            throw new AppError("Vendor not found", 404)
+        }
+
+        res.status(200).send({
+            success:true,
+            message : "Vendor with phone number exist",
+        });
+        return;
+
+    } catch (error) {
+        console.error("Error while verifying user phone number status:", error);
+        next(error);
+        return;
+    }
+}
+
+
+
+
 export const verifyOtp = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { phone, otp } = req.body;
+        const { phone } = req.body;
         console.debug("\nVerify OTP request received for phone:", phone);
 
-        if (!phone || !otp) {
-            console.warn("Phone number and OTP are required.");
+        if (!phone) {
+            console.warn("Phone number are required.");
             throw new AppError("Phone number and OTP are required.", 400);
         }
 
-        const result = await Vendor.verifyOtp(phone, otp);
-        console.debug("OTP verification result ==> ", result);
+        // const result = await Vendor.verifyOtp(phone);
+        // console.debug("OTP verification result ==> ", result);
+
+        const existingVendor = await Vendor.findOne({ phone, isActive: false }).select("+phoneVerification");
+        console.debug("Existing vendor check ==> ", existingVendor);
+        if (existingVendor && existingVendor.phoneVerification && existingVendor.phoneVerification.isVerified) {
+            console.warn("Phone number already in use.");
+            throw new AppError("Phone number already in use.", 400);
+        }
+
+        const result = await Vendor.findOneAndUpdate(
+            { phone },
+            {
+                $set: {
+                    phone,
+                    phoneVerification: { isVerified: true }
+                }
+            },
+            { upsert: true, new: true }
+        );
+        console.debug("\n New vendor check ==> ", result);
 
         res.status(200).send({
             success: true,
