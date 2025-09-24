@@ -65,7 +65,7 @@ export const updateAccessories = async (req: Request, res: Response, next: NextF
         }
 
         if (updateData.stock) {
-            delete updateData.stock;
+            delete updateData.stock
         }
 
         const accessories = await Accessories.findByIdAndUpdate(AccessoriesId, updateData, { new: true });
@@ -160,10 +160,15 @@ export const getAllAccessories = async (req: Request, res: Response, next: NextF
         let filter: any = { status: 'active' };
 
         if (search) {
+            const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
             filter = {
                 ...filter,
-                $text: { $search: search }
-            }
+                $or: [
+                    { productCode: { $regex: escapedSearch, $options: 'i' } },
+                    { $text: { $search: search } }
+                ]
+            };
         }
 
         if (vendorId) {

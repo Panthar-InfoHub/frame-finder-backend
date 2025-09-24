@@ -64,9 +64,16 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
             return;
         }
 
-        if (updateData.stock) {
-            delete updateData.stock;
+        //check if update Data have variants and if they have stock or not ??
+        if (updateData.variants) {
+            updateData.variants.forEach((variant: any) => {
+                console.debug("\n Checking if variant have stock or not => ", variant)
+                if (variant.stock) delete variant.stock
+            });
         }
+
+        console.debug("\n Updated data => ", updateData)
+
 
         const product = await Product.findByIdAndUpdate(productId, updateData, { new: true });
 
@@ -95,36 +102,38 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 }
 
 //Update stock of product
-export const updateProductStock = async (req: Request, res: Response, next: NextFunction) => {
+export const updateVariantStock = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
         const productId = req.params.id;
-        const { operation, quantity } = req.body;
+        const { operation, quantity, variantId } = req.body;
 
         console.debug(`Updating stock for product with ID: ${productId}`);
         console.debug("\nOperation: ", operation, " Quantity: ", quantity);
         if (!productId) {
-            console.warn("No product ID provided");
-            res.status(400).send({ success: false, message: "Product ID is required" });
-            return;
+            console.warn("No vairant ID provided");
+            throw new AppError("Variant ID is required", 400)
         }
 
-        if (!operation || !quantity) {
-            console.warn("Operation and quantity are required");
-            res.status(400).send({ success: false, message: "Operation and quantity are required" });
-            return;
+        if (!operation || !quantity || !variantId) {
+            console.warn("Operation, variant id and quantity are required");
+            throw new AppError("Operation, variant id and quantity are required", 400)
         }
 
         const finalQuantity = operation === "increase" ? Math.abs(quantity) : -Math.abs(quantity);
-        const updateOpn = { $inc: { "stock.current": finalQuantity } }
+        const updateOpn = { $inc: { "variants.$.stock.current": finalQuantity } }
 
         console.debug("Update operation: ", updateOpn);
 
-        const product = await Product.findByIdAndUpdate(productId, updateOpn, { new: true });
+        const product = await Product.findOneAndUpdate(
+            { _id: productId, "variants._id": variantId },
+            updateOpn,
+            { new: true }
+        );
 
         if (!product) {
-            console.warn(`Product with ID ${productId} not found`);
-            res.status(404).send({ success: false, message: "Product not found" });
+            console.warn(`Product with ID ${productId} and variant with ID ${variantId} not found.`);
+            res.status(404).send({ success: false, message: "Product or variant id is invalid" });
             return;
         }
 
@@ -150,25 +159,25 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
         const page = parseInt(req.params.page as string) || 1;
         const limit = parseInt(req.params.limit as string) || 100;
         const skip = (page - 1) * limit;
-        const categoryIds = (req.query.categoryIds as string)?.split(",") || [];
 
         const search = req.query.search as string || "";
 
         console.debug("\nSearch query: ", search);
-        console.debug("\nCategory IDs: ", categoryIds);
 
         let filter: any = { status: 'active' };
 
         if (search) {
+            const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
             filter = {
                 ...filter,
-                $text: { $search: search }
-            }
+                $or: [
+                    { productCode: { $regex: escapedSearch, $options: 'i' } },
+                    { $text: { $search: search } }
+                ]
+            };
         }
 
-        if (categoryIds && categoryIds?.length > 0) {
-            filter.categoryId = { $in: categoryIds };
-        }
 
         console.debug("Filter for products: ", filter);
 

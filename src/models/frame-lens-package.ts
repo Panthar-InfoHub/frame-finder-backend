@@ -36,11 +36,6 @@ export const baseLensPackageSchema = new mongoose.Schema({
             default: 5,
             min: 0
         },
-        maximum: {
-            type: Number,
-            default: 100,
-            min: 0
-        }
     },
 }, { timestamps: true });
 

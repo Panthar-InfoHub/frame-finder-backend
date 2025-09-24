@@ -64,8 +64,12 @@ export const updateSunglass = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        if (updateData.stock) {
-            delete updateData.stock;
+        //check if update Data have variants and if they have stock or not ??
+        if (updateData.variants) {
+            updateData.variants.forEach((variant: any) => {
+                console.debug("\n Checking if variant have stock or not => ", variant)
+                if (variant.stock) delete variant.stock
+            });
         }
 
         const sunglass = await Sunglass.findByIdAndUpdate(SunglassId, updateData, { new: true });
@@ -99,7 +103,7 @@ export const updateSunglassStock = async (req: Request, res: Response, next: Nex
     try {
 
         const SunglassId = req.params.id;
-        const { operation, quantity } = req.body;
+        const { operation, quantity, variantId } = req.body;
 
         console.debug(`Updating stock for Sunglass with ID: ${SunglassId}`);
         console.debug("\nOperation: ", operation, " Quantity: ", quantity);
@@ -109,21 +113,25 @@ export const updateSunglassStock = async (req: Request, res: Response, next: Nex
             return;
         }
 
-        if (!operation || !quantity) {
-            console.warn("Operation and quantity are required");
-            res.status(400).send({ success: false, message: "Operation and quantity are required" });
-            return;
+        if (!operation || !quantity || !variantId) {
+            console.warn("Operation, variant id and quantity are required");
+            throw new AppError("Operation, variant id and quantity are required", 400)
         }
 
+
         const finalQuantity = operation === "increase" ? Math.abs(quantity) : -Math.abs(quantity);
-        const updateOpn = { $inc: { "stock.current": finalQuantity } }
+        const updateOpn = { $inc: { "variants.$.stock.current": finalQuantity } }
 
         console.debug("Update operation: ", updateOpn);
 
-        const sunglass = await Sunglass.findByIdAndUpdate(SunglassId, updateOpn, { new: true });
+        const sunglass = await Sunglass.findOneAndUpdate(
+            { _id: SunglassId, "variants._id": variantId },
+            updateOpn,
+            { new: true }
+        )
 
         if (!sunglass) {
-            console.warn(`Sunglass with ID ${SunglassId} not found`);
+            console.warn(`Sunglass with ID ${SunglassId} not found and variant with ID ${variantId} not found`);
             res.status(404).send({ success: false, message: "Sunglass not found" });
             return;
         }
@@ -160,10 +168,15 @@ export const getAllSunglass = async (req: Request, res: Response, next: NextFunc
         let filter: any = { status: 'active' };
 
         if (search) {
+            const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
             filter = {
                 ...filter,
-                $text: { $search: search }
-            }
+                $or: [
+                    { productCode: { $regex: escapedSearch, $options: 'i' } },
+                    { $text: { $search: search } }
+                ]
+            };
         }
 
         if (vendorId) {
