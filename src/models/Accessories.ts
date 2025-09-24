@@ -19,6 +19,24 @@ accessories.add({
         base_price: { type: Number, required: true },
         mrp: { type: Number, required: true },
     },
+    stock: {
+        current: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        minimum: {
+            type: Number,
+            default: 5,
+            min: 0
+        },
+    },
+})
+
+accessories.index({
+    brand_name: 'text',
+    desc: 'text',
+    vendorId: 1
 })
 
 // Generate package Code before saving

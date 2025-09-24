@@ -40,7 +40,6 @@ const wishListSchema = new mongoose.Schema({
 
     subTotal: {
         type: Number,
-        required: true
     }
 }, { timestamps: true });
 

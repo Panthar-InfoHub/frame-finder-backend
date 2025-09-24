@@ -21,7 +21,25 @@ contactLensSchema.add({
     images: [
         { url: { type: String, trim: true } }
     ],
-    size: [String]
+    size: [String],
+    stock: {
+        current: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        minimum: {
+            type: Number,
+            default: 5,
+            min: 0
+        },
+    },
+})
+
+contactLensSchema.index({
+    brand_name: 'text',
+    desc: 'text',
+    vendorId: 1
 })
 
 // Generate product ID before saving

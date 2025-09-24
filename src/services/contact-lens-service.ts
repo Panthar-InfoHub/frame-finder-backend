@@ -43,9 +43,14 @@ export class ContactLensService {
 
         // Add text search filter
         if (search) {
+            const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
             filter = {
                 ...filter,
-                $text: { $search: search }
+                $or: [
+                    { productCode: { $regex: escapedSearch, $options: 'i' } },
+                    { $text: { $search: search } }
+                ]
             };
         }
 

@@ -42,23 +42,6 @@ export const baseProductSchema = new mongoose.Schema({
         },
         default: ['unisex']
     }],
-    stock: {
-        current: {
-            type: Number,
-            default: 0,
-            min: 0
-        },
-        minimum: {
-            type: Number,
-            default: 5,
-            min: 0
-        },
-        maximum: {
-            type: Number,
-            default: 100,
-            min: 0
-        }
-    },
     vendorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Vendor",
@@ -81,11 +64,7 @@ export const baseProductSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-baseProductSchema.index({
-    brand_name: 'text',
-    desc: 'text',
-    vendorId: 1
-})
+
 
 
 const productSchema = baseProductSchema.clone();
@@ -102,7 +81,24 @@ productSchema.add({
         images: [
             { url: { type: String, trim: true } }
         ],
+        stock: {
+            current: {
+                type: Number,
+                default: 0,
+                min: 0
+            },
+            minimum: {
+                type: Number,
+                default: 5,
+                min: 0
+            },
+        },
     }]
+})
+productSchema.index({
+    brand_name: 'text',
+    desc: 'text',
+    vendorId: 1
 })
 
 // Generate product ID before saving

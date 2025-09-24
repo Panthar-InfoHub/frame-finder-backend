@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { auth } from "../middlwares/auth.js";
 import { isAdmin, isVendor } from "../middlwares/roleCheck.js";
-import { createProduct, updateProduct, updateProductStock, getAllProducts, getProductById, deleteProduct } from "../controllers/product-controller.js";
+import { createProduct, updateProduct, updateVariantStock, getAllProducts, getProductById, deleteProduct } from "../controllers/product-controller.js";
 
 export const productRouter = Router();
 
@@ -21,7 +21,7 @@ productRouter.put("/:id", [
 productRouter.put("/:id/stock", [
     auth,
     isVendor
-], updateProductStock)
+], updateVariantStock)
 
 //get all products
 productRouter.get("/", [
