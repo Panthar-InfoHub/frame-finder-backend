@@ -1,13 +1,12 @@
 import { NextFunction, Request, Response } from "express";
-import { Product } from "../models/products.js";
-import { startSession } from "mongoose";
 import AppError from "../middlwares/Error.js";
+import { Product } from "../models/products.js";
+import { ProductService } from "../services/product-service.js";
+
+const productService = new ProductService(Product, "Product");
+
 
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
-
-    const session = await startSession()
-
-    await session.startTransaction();
     try {
         const productData = req.body;
 
@@ -24,17 +23,9 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
 
         console.debug("\nProduct data received for creation ==> ", productData);
 
-        const product = await Product.create([productData], { session });
-
-        if (!product) {
-            console.warn("Product creation failed");
-            await session.abortTransaction();
-            throw new AppError("Failed to create product", 500);
-        }
+        const product = await productService.create(productData);
 
         console.debug("\nProduct created successfully: ", product);
-        await session.commitTransaction();
-        console.debug("Transaction committed successfully");
 
         res.status(201).send({
             success: true,
@@ -43,7 +34,6 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
         });
         return;
     } catch (error) {
-        await session.abortTransaction();
         console.error("Error creating product ==> ", error);
         next(error);
         return;
@@ -60,8 +50,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         console.debug("\n Updating data => ", updateData)
         if (!productId) {
             console.warn("No product ID provided");
-            res.status(400).send({ success: false, message: "Product ID is required" });
-            return;
+            throw new AppError("Product ID is required", 400);
         }
 
         //check if update Data have variants and if they have stock or not ??
@@ -74,17 +63,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 
         console.debug("\n Updated data => ", updateData)
 
-
-        const product = await Product.findByIdAndUpdate(productId, updateData, { new: true });
-
-        if (!product) {
-            console.warn(`Product with ID ${productId} not found`);
-            res.status(404).send({
-                success: false,
-                message: "Product not found"
-            });
-            return;
-        }
+        const product = await productService.update(productId, updateData);
 
         console.debug("Updated product ==> ", product);
         res.status(200).send({
@@ -101,7 +80,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
     }
 }
 
-//Update stock of product
+//Update stock of product variant
 export const updateVariantStock = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
@@ -120,24 +99,9 @@ export const updateVariantStock = async (req: Request, res: Response, next: Next
             throw new AppError("Operation, variant id and quantity are required", 400)
         }
 
-        const finalQuantity = operation === "increase" ? Math.abs(quantity) : -Math.abs(quantity);
-        const updateOpn = { $inc: { "variants.$.stock.current": finalQuantity } }
+        const product = await productService.updateStock(productId, variantId, operation, quantity);
 
-        console.debug("Update operation: ", updateOpn);
-
-        const product = await Product.findOneAndUpdate(
-            { _id: productId, "variants._id": variantId },
-            updateOpn,
-            { new: true }
-        );
-
-        if (!product) {
-            console.warn(`Product with ID ${productId} and variant with ID ${variantId} not found.`);
-            res.status(404).send({ success: false, message: "Product or variant id is invalid" });
-            return;
-        }
-
-        console.debug("Updated product  ==> ", product);
+        console.debug("Updated product stock successfully ==> ", product);
         res.status(200).send({
             success: true,
             message: "Product stock updated successfully",
@@ -159,6 +123,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
         const page = parseInt(req.params.page as string) || 1;
         const limit = parseInt(req.params.limit as string) || 100;
         const skip = (page - 1) * limit;
+        const vendorId = req.query.vendorId as string;
 
         const search = req.query.search as string || "";
 
@@ -178,28 +143,19 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
             };
         }
 
+        if (vendorId) {
+            filter.vendorId = vendorId;
+        }
 
         console.debug("Filter for products: ", filter);
 
-        const [products, totalProducts] = await Promise.all([Product
-            .find(filter)
-            .skip(skip)
-            .limit(limit),
-        Product.countDocuments(filter)]);
-
-        console.debug("\nFetched products: ", products);
-        console.debug("\nTotal products count: ", totalProducts);
+        const result = await productService.getAll({ filter, skip, limit });
+        console.debug("\nResult: ", result);
 
         res.status(200).send({
             success: true,
             message: "Products fetched successfully",
-            data: {
-                products,
-                pagination: {
-                    totalProducts,
-                    totalPages: Math.ceil(totalProducts / limit)
-                }
-            }
+            data: result
         });
         return;
 
@@ -217,19 +173,10 @@ export const getProductById = async (req: Request, res: Response, next: NextFunc
 
         if (!productId) {
             console.warn("No product ID provided");
-            res.status(400).send({ success: false, message: "Product ID is required" });
-            return;
+            throw new AppError("Product ID is required", 400);
         }
 
-        const product = await Product
-            .findById(productId)
-            .populate("vendorId", "business_name email phone")
-
-        if (!product || product.status === 'inactive') {
-            console.warn(`Product with ID ${productId} not found`);
-            res.status(404).send({ success: false, message: "Product not found" });
-            return;
-        }
+        const product = await productService.getById(productId);
 
         console.debug("Fetched product: ", product);
         res.status(200).send({
@@ -255,25 +202,20 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
 
         if (!id) {
             console.warn("No product id provided...")
-            res.status(404).send({
-                success: false,
-                message: "Product ID is required"
-            })
+            throw new AppError("Product ID is required", 400);
         }
 
-        const product = await Product.findByIdAndUpdate(id, { status: 'inactive' }, { new: true });
+        const product : any = await productService.delete(id);
 
-        if (!product) {
-            console.warn(`Product with ID ${id} not found`);
-            res.status(404).send({ success: false, message: "Product not found" });
-            return;
-        }
-
-        console.debug("Deleted product: ", product);
+        console.debug("Deleted product ==> ", product);
         res.status(200).send({
             success: true,
             message: "Product deleted successfully",
-            data: product
+            data: {
+                brand_name: product.brand_name,
+                productCode: product.productCode,
+                id : product._id
+            }
         });
         return;
 

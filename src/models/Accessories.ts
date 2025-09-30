@@ -1,12 +1,11 @@
 import mongoose from "mongoose";
-import { generateReadableProductCode } from "../lib/helper.js";
 import { baseProductSchema } from "./products.js";
 
 const accessories = baseProductSchema.clone();
 
 accessories.remove('shape')
+accessories.remove('dimension')
 accessories.remove('style')
-accessories.remove('sizes')
 accessories.remove('gender')
 
 //Add images to base schema 
@@ -15,9 +14,13 @@ accessories.add({
     images: [
         { url: { type: String, trim: true } }
     ],
+    mfg_date: { type: Date, default: Date.now },
+    exp: { type: Date },
+    origin_country: { type: String },
     price: {
         base_price: { type: Number, required: true },
         mrp: { type: Number, required: true },
+        total_price: { type: Number, required: true }
     },
     stock: {
         current: {
@@ -31,19 +34,13 @@ accessories.add({
             min: 0
         },
     },
+
+    // sizes: [String],
 })
 
 accessories.index({
     brand_name: 'text',
-    desc: 'text',
     vendorId: 1
 })
 
-// Generate package Code before saving
-accessories.pre('validate', async function (next) {
-    if (this.isNew && !this.productCode) {
-        this.productCode = generateReadableProductCode("ACS");
-    }
-    next();
-});
 export const Accessories = mongoose.model("Accessories", accessories)

@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { generateReadableProductCode } from "../lib/helper.js";
 
 export const baseProductSchema = new mongoose.Schema({
     productCode: {
@@ -12,12 +11,12 @@ export const baseProductSchema = new mongoose.Schema({
         required: [true, 'Product name is required'],
         trim: true,
     },
-    desc: {
-        type: String,
-        required: [true, 'Product description is required'],
-        trim: true
+    dimension: {
+        lens_width: String,
+        bridge_width: String,
+        temple_length: String,
+        lens_height: String,
     },
-
     material: [String],
     shape: [String],
     style: [String],
@@ -32,7 +31,7 @@ export const baseProductSchema = new mongoose.Schema({
             values: ['S', 'M', 'L', 'XL'],
             message: '{VALUE} is not a valid gender'
         },
-        default: ['unisex']
+        default: ['']
     }],
     gender: [{
         type: String,
@@ -70,13 +69,19 @@ export const baseProductSchema = new mongoose.Schema({
 const productSchema = baseProductSchema.clone();
 
 productSchema.add({
+    is_Power: { type: Boolean, default: false },
     type: { type: String, default: "Product" },
     variants: [{
-        frame_color: [String],
-        temple_color: [String],
+                frame_color: { type: String },
+        temple_color: { type: String },
         price: {
             base_price: { type: Number, required: true },
             mrp: { type: Number, required: true },
+            shipping_price: {
+                custom: { type: Boolean, default: false },
+                value: { type: Number, default: 0 }
+            },
+            total_price: { type: Number, required: true }
         },
         images: [
             { url: { type: String, trim: true } }
@@ -97,16 +102,15 @@ productSchema.add({
 })
 productSchema.index({
     brand_name: 'text',
-    desc: 'text',
     vendorId: 1
 })
 
 // Generate product ID before saving
-productSchema.pre('validate', async function (next) {
-    if (this.isNew && !this.productCode) {
-        this.productCode = generateReadableProductCode("FRA");
-    }
-    next();
-});
+// productSchema.pre('validate', async function (next) {
+//     if (this.isNew && !this.productCode) {
+//         this.productCode = generateReadableProductCode("FRA");
+//     }
+//     next();
+// });
 
 export const Product = mongoose.model("Product", productSchema);

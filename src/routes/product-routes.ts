@@ -1,7 +1,7 @@
 import { Router } from "express";
+import { createProduct, deleteProduct, getAllProducts, getProductById, updateProduct, updateVariantStock } from "../controllers/product-controller.js";
 import { auth } from "../middlwares/auth.js";
-import { isAdmin, isVendor } from "../middlwares/roleCheck.js";
-import { createProduct, updateProduct, updateVariantStock, getAllProducts, getProductById, deleteProduct } from "../controllers/product-controller.js";
+import { isVendor } from "../middlwares/roleCheck.js";
 
 export const productRouter = Router();
 
@@ -36,5 +36,5 @@ productRouter.get("/:id", [
 //delete product
 productRouter.delete("/:id", [
     auth,
-    isAdmin
+    isVendor
 ], deleteProduct)

@@ -3,27 +3,27 @@ import { body, param } from "express-validator";
 import { LensController } from "../controllers/contact-lens-controller.js";
 import { auth } from "../middlwares/auth.js";
 import { isVendor } from "../middlwares/roleCheck.js";
-import { ContactLens } from "../models/contact-lens.js";
+import { ColorContactLens } from "../models/color-contact-lens.js";
 
-export const contactLensRouter = Router();
+export const clrContactLensRouter = Router();
 
-const contactLensController = new LensController(ContactLens, "Contact Lens")
+const contactLensController = new LensController(ColorContactLens, "Color Contact Lens")
 
-contactLensRouter.post("/", [
+clrContactLensRouter.post("/", [
     auth,
     isVendor
 ], contactLensController.createContactLens)
 
-contactLensRouter.get("/", contactLensController.getAllContactLens)
-contactLensRouter.get("/:id", contactLensController.getContactLensById)
+clrContactLensRouter.get("/", contactLensController.getAllContactLens)
+clrContactLensRouter.get("/:id", contactLensController.getContactLensById)
 
-contactLensRouter.put("/:id", [
+clrContactLensRouter.put("/:id", [
     auth,
     isVendor,
     param('id').isMongoId().withMessage("Invalid Id format"),
 ], contactLensController.updateContactLens)
 
-contactLensRouter.put("/:id/variant", [
+clrContactLensRouter.put("/:id/variant", [
     auth,
     isVendor,
     param('id').isMongoId().withMessage("Invalid Id format"),
@@ -32,7 +32,7 @@ contactLensRouter.put("/:id/variant", [
     body('stock').not().exists().withMessage('Stock updates not allowed in variant update endpoint'),
 ], contactLensController.updateLensVariantDetail)
 
-contactLensRouter.put("/:id/stock", [
+clrContactLensRouter.put("/:id/stock", [
     auth,
     isVendor,
     param('id').isMongoId().withMessage("Invalid Id format"),
@@ -40,7 +40,7 @@ contactLensRouter.put("/:id/stock", [
     body('lens_type').isIn(['non_toric', 'toric', 'multi_focal']).withMessage('Lens type must be non_toric, toric, or multi_focal'),
 ], contactLensController.updateLensStock)
 
-contactLensRouter.delete("/:id", [
+clrContactLensRouter.delete("/:id", [
     auth,
     isVendor,
     param('id').isMongoId().withMessage("Invalid Id format"),
