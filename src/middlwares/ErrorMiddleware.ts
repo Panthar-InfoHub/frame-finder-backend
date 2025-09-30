@@ -8,6 +8,9 @@ interface customError extends Error {
     keyValue?: { [key: string]: any };
     path?: string;
     value?: string;
+    errorResponse?: {
+        errmsg?: string;
+    };
     errors?: {
         [key: string]: {
             path?: string;
@@ -33,6 +36,11 @@ export const errorHandler: ErrorRequestHandler = (err: customError, _req: Reques
         if (err.code === 11000) {
             statusCode = 409;
             message = `Duplicate field value entered: ${Object.keys(err.keyValue || {})}`;
+            errorType = "DuplicateKeyError";
+        }
+        if (err.code === 27) {
+            statusCode = 409;
+            message = `Product not found ==> ${err.errorResponse?.errmsg}`;
             errorType = "DuplicateKeyError";
         }
     }

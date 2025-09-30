@@ -1,11 +1,14 @@
 import bcrypt from "bcrypt";
 import mongoose, { Document } from "mongoose";
-import AppError from "../middlwares/Error.js";
 
 interface IVendor extends Document {
     _id: mongoose.Types.ObjectId;
     business_name?: string;
     business_owner?: string;
+    firm_name?: string;
+    dob?: Date;
+    company_pan ?: string;
+    year_of_experience?: number;
     address?: {
         address_line_1?: string;
         city?: string;
@@ -26,12 +29,12 @@ interface IVendor extends Document {
         otpExpires?: Date;
         isVerified: boolean;
     };
-    bank_details?:{
+    bank_details?: {
         account_holder_name?: string;
         account_number?: string;
         ifsc_code?: string;
     }
-    categories?:[string];
+    categories?: [string];
 }
 
 
@@ -43,15 +46,31 @@ interface vendorSchemaType extends mongoose.Model<IVendor> {
 
 
 const vendorSchema = new mongoose.Schema<IVendor, vendorSchemaType>({
-    business_name: {
+    business_name: { //brand name
         type: String,
         trim: true,
         // required: [true, "Business name is required for vendor"]
+    },
+    company_pan: {
+        type: String,
+        trim: true,
     },
     business_owner: {
         type: String,
         trim: true,
         // required: [true, "Business owner is required for vendor"]
+    },
+    firm_name: {
+        type: String,
+        trim: true,
+    },
+    dob: {
+        type: Date,
+        trim: true,
+    },
+    year_of_experience: {
+        type: Number,
+        trim: true,
     },
     address: {
         address_line_1: String,
@@ -112,12 +131,14 @@ const vendorSchema = new mongoose.Schema<IVendor, vendorSchemaType>({
         },
         select: false
     },
-    bank_details:{
+    bank_details: {
         account_holder_name: { type: String, trim: true },
         account_number: { type: String, trim: true },
         ifsc_code: { type: String, trim: true },
+        personal_aadhar: { type: String, trim: true},
+        personal_pan: { type: String, trim: true },
     },
-    categories:[String]
+    categories: [String]
 
 }, { timestamps: true });
 
@@ -141,29 +162,5 @@ vendorSchema.methods.comparePassword = async function (password: string) {
     return await bcrypt.compare(password, this.password);
 }
 
-vendorSchema.statics.verifyOtp = async function (phone: string, otp: string) {
-    const vendor = await this.findOne({ phone, isActive: false }).select("+phoneVerification");
-    if (!vendor || !vendor.phoneVerification || vendor.phoneVerification.isVerified) {
-        console.warn("Vendor not found or Vendor already verified.");
-        throw new AppError("Vendor not found or Vendor already verified.", 400);
-    }
-
-    if (!vendor.phoneVerification.otpExpires || vendor.phoneVerification.otpExpires < new Date()) {
-        console.warn("OTP has expired.");
-        throw new AppError("OTP has expired.", 410);
-    }
-
-    const isMatch = await bcrypt.compare(otp, vendor.phoneVerification.otp!);
-    if (!isMatch) {
-        console.warn("Invalid OTP.");
-        throw new AppError("Invalid OTP.", 400);
-    }
-
-    vendor.phoneVerification.isVerified = true;
-    vendor.phoneVerification.otp = undefined;
-    vendor.phoneVerification.otpExpires = undefined;
-    await vendor.save();
-    return true;
-}
 
 export const Vendor = mongoose.model<IVendor, vendorSchemaType>("Vendor", vendorSchema);

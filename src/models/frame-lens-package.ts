@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { generateReadableProductCode } from "../lib/helper.js";
 
 export const baseLensPackageSchema = new mongoose.Schema({
     packageCode: {
@@ -57,11 +56,11 @@ lensPackageSchema.add({
 lensPackageSchema.index({ vendorId: 1, package_design: 1, package_type: 1 })
 
 // Generate package Code before saving
-lensPackageSchema.pre('validate', async function (next) {
-    if (this.isNew && !this.packageCode) {
-        this.packageCode = generateReadableProductCode("LPKG");
-    }
-    next();
-});
+// lensPackageSchema.pre('validate', async function (next) {
+//     if (this.isNew && !this.packageCode) {
+//         this.packageCode = generateReadableProductCode("LPKG");
+//     }
+//     next();
+// });
 
 export const LensPackage = mongoose.model("LensPackage", lensPackageSchema)

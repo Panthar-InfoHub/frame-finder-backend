@@ -1,19 +1,19 @@
 import { NextFunction, Request, Response } from "express";
 import AppError from "../middlwares/Error.js";
-import { Sunglass } from "../models/sunglass.js";
+import { Reader } from "../models/reader.js";
 import { ProductService } from "../services/product-service.js";
 
-const sunglassService = new ProductService(Sunglass, "Sunglass");
+const readerService = new ProductService(Reader, "Reader");
 
 
-export const createSunglass = async (req: Request, res: Response, next: NextFunction) => {
+export const createReader = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         const productData = req.body;
 
         if (!productData || Object.keys(productData).length === 0) {
-            console.warn("No Sunglass data provided");
-            throw new AppError("Sunglass data is required", 400);
+            console.warn("No Reader data provided");
+            throw new AppError("Reader data is required", 400);
         }
 
         if (!["SUPER_ADMIN", "ADMIN"].includes(req?.user?.role || "")) {
@@ -22,36 +22,36 @@ export const createSunglass = async (req: Request, res: Response, next: NextFunc
             }
         }
 
-        console.debug("\nSunglass data received for creation ==> ", productData);
+        console.debug("\nReader data received for creation ==> ", productData);
 
-        const product = await sunglassService.create(productData);
+        const product = await readerService.create(productData);
 
-        console.debug("\nSunglass created successfully: ", product);
+        console.debug("\nReader created successfully: ", product);
 
         res.status(201).send({
             success: true,
-            message: 'Sunglass created successfully',
+            message: 'Reader created successfully',
             data: product
         });
         return;
     } catch (error) {
-        console.error("Error creating Sunglass ==> ", error);
+        console.error("Error creating Reader ==> ", error);
         next(error);
         return;
     }
 }
 
-//Update Sunglass except stock
-export const updateSunglass = async (req: Request, res: Response, next: NextFunction) => {
+//Update Reader except stock
+export const updateReader = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const SunglassId = req.params.id;
+        const readerId = req.params.id;
         const updateData = req.body;
 
-        console.debug(`Updating Sunglass with ID: ${SunglassId}`);
+        console.debug(`Updating Reader with ID: ${readerId}`);
         console.debug("\n Updating data => ", updateData)
-        if (!SunglassId) {
-            console.warn("No Sunglass ID provided");
-            res.status(400).send({ success: false, message: "Sunglass ID is required" });
+        if (!readerId) {
+            console.warn("No Reader ID provided");
+            res.status(400).send({ success: false, message: "Reader ID is required" });
             return;
         }
 
@@ -64,36 +64,35 @@ export const updateSunglass = async (req: Request, res: Response, next: NextFunc
         }
 
         console.debug("\n Updated data => ", updateData)
-        const sunglass = await sunglassService.update(SunglassId, updateData);
+        const reader = await readerService.update(readerId, updateData);
 
-        console.debug("Updated Sunglass ==> ", sunglass);
+        console.debug("Updated Reader ==> ", reader);
         res.status(200).send({
             success: true,
-            message: "Sunglass updated successfully",
-            data: sunglass
+            message: "Reader updated successfully",
+            data: reader
         });
         return;
 
     } catch (error) {
-        console.error("Error updating Sunglass: ", error);
+        console.error("Error updating Reader: ", error);
         next(error);
         return;
     }
 }
 
-//Update stock of Sunglass
-export const updateSunglassStock = async (req: Request, res: Response, next: NextFunction) => {
+//Update stock of Reader
+export const updateReaderStock = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
-        const SunglassId = req.params.id;
+        const readerId = req.params.id;
         const { operation, quantity, variantId } = req.body;
 
-        console.debug(`Updating stock for Sunglass with ID: ${SunglassId}`);
+        console.debug(`Updating stock for Reader with ID: ${readerId}`);
         console.debug("\nOperation: ", operation, " Quantity: ", quantity);
-        if (!SunglassId) {
-            console.warn("No Sunglass ID provided");
-            res.status(400).send({ success: false, message: "Sunglass ID is required" });
-            return;
+        if (!readerId) {
+            console.warn("No Reader ID provided");
+            throw new AppError("Reader ID is required", 400);
         }
 
         if (!operation || !quantity || !variantId) {
@@ -101,14 +100,14 @@ export const updateSunglassStock = async (req: Request, res: Response, next: Nex
             throw new AppError("Operation, variant id and quantity are required", 400)
         }
 
-        const sunglass: any = await sunglassService.updateStock(SunglassId, variantId, operation, quantity);
+        const reader: any = await readerService.updateStock(readerId, variantId, operation, quantity);
 
 
-        console.debug("Updated Sunglass  ==> ", sunglass);
+        console.debug("Updated Reader  ==> ", reader);
         res.status(200).send({
             success: true,
-            message: "Sunglass stock updated successfully",
-            data: sunglass
+            message: "Reader stock updated successfully",
+            data: reader
         });
         return;
 
@@ -119,8 +118,8 @@ export const updateSunglassStock = async (req: Request, res: Response, next: Nex
     }
 }
 
-//get all sunglass
-export const getAllSunglass = async (req: Request, res: Response, next: NextFunction) => {
+//get all reader
+export const getAllReader = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
         const page = parseInt(req.params.page as string) || 1;
@@ -151,14 +150,14 @@ export const getAllSunglass = async (req: Request, res: Response, next: NextFunc
             filter.vendorId = vendorId;
         }
 
-        console.debug("Filter for sunglass: ", filter);
+        console.debug("Filter for reader: ", filter);
 
-        const result = await sunglassService.getAll({ filter, skip, limit });
+        const result = await readerService.getAll({ filter, skip, limit });
         console.debug("\nResult: ", result);
 
         res.status(200).send({
             success: true,
-            message: "Sunglasss fetched successfully",
+            message: "Readers fetched successfully",
             data: {
                 result,
             }
@@ -166,73 +165,73 @@ export const getAllSunglass = async (req: Request, res: Response, next: NextFunc
         return;
 
     } catch (error) {
-        console.error("\nError fetching sunglass: ", error);
+        console.error("\nError fetching reader: ", error);
         next(error);
         return;
     }
 }
 
-//get Sunglass by id
-export const getSunglassById = async (req: Request, res: Response, next: NextFunction) => {
+//get Reader by id
+export const getReaderById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const SunglassId = req.params.id;
+        const readerId = req.params.id;
 
-        if (!SunglassId) {
-            console.warn("No Sunglass ID provided");
-            res.status(400).send({ success: false, message: "Sunglass ID is required" });
+        if (!readerId) {
+            console.warn("No Reader ID provided");
+            res.status(400).send({ success: false, message: "Reader ID is required" });
             return;
         }
 
-        const sunglass = await sunglassService.getById(SunglassId);
+        const reader = await readerService.getById(readerId);
 
 
-        console.debug("Fetched Sunglass: ", sunglass);
+        console.debug("Fetched Reader: ", reader);
         res.status(200).send({
             success: true,
-            message: "Sunglass fetched successfully",
-            data: sunglass
+            message: "Reader fetched successfully",
+            data: reader
         });
         return;
 
     } catch (error) {
-        console.error("Error fetching Sunglass: ", error);
+        console.error("Error fetching Reader by ID ==> ", error);
         next(error);
         return;
     }
 }
 
-//delete Sunglass
-export const deleteSunglass = async (req: Request, res: Response, next: NextFunction) => {
+//delete Reader
+export const deleteReader = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const id = req.params.id
 
-        console.debug("Sunglass ID for deleting Sunglass ==> ", id);
+        console.debug("Reader ID for deleting Reader ==> ", id);
 
         if (!id) {
-            console.warn("No Sunglass id provided...")
+            console.warn("No Reader id provided...")
             res.status(404).send({
                 success: false,
-                message: "Sunglass ID is required"
+                message: "Reader ID is required"
             })
         }
 
-        const sunglass: any = await sunglassService.delete(id);
+        const reader: any = await readerService.delete(id);
 
 
-        console.debug("Deleted sunglass: ", sunglass);
+        console.debug("Deleted reader: ", reader);
         res.status(200).send({
             success: true,
-            message: "Sunglass deleted successfully",
+            message: "Reader deleted successfully",
             data: {
-                brand_name: sunglass.brand_name,
-                productCode: sunglass.productCode,
-                id: sunglass._id
+                brand_name: reader.brand_name,
+                productCode: reader.productCode,
+                id: reader._id
             }
         });
         return;
 
     } catch (error) {
-        console.error("Error while deleting sunglass... ===> ", error)
+        console.error("Error while deleting reader... ===> ", error)
         next(error)
         return;
     }

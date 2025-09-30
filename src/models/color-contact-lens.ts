@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
 import { baseProductSchema } from "./products.js";
 
-const contactLensSchema = baseProductSchema.clone();
+const colorContactLensSchema = baseProductSchema.clone();
 
-
-contactLensSchema.remove([
+colorContactLensSchema.remove([
     "material",
     "shape",
     "style",
@@ -12,8 +11,6 @@ contactLensSchema.remove([
     "gender",
     "hsn_code"
 ]);
-
-
 
 
 const baseVariantSchema = new mongoose.Schema({
@@ -41,6 +38,7 @@ const baseVariantSchema = new mongoose.Schema({
         trim: true
     },
     pieces_per_box: { type: Number, default: 0 },
+    color: { type: String, trim: true },
     price: {
         base_price: {
             type: Number, required: true, min: [0, 'Base price cannot be negative']
@@ -68,7 +66,9 @@ const baseVariantSchema = new mongoose.Schema({
             min: 0
         },
     },
-    images: [{ url: { type: String, trim: true } }],
+    images: [
+        { url: { type: String, trim: true } }
+    ],
     power_range: {
         spherical: {
             min: {
@@ -92,75 +92,27 @@ const baseVariantSchema = new mongoose.Schema({
                 }
             }
         },
-        addition: {
-            min: {
-                type: Number,
-                validate: {
-                    validator: function () {
-                        const max = (this as any).power_range?.addition?.max;
-                        return max == null || (this as any).power_range.addition.min <= max;
-                    },
-                    message: 'Addition min power must be ≤ max power'
-                }
-            },
-            max: {
-                type: Number,
-                validate: {
-                    validator: function () {
-                        const min = (this as any).power_range?.addition?.min;
-                        return min == null || min <= (this as any).power_range.addition.max;
-                    },
-                    message: 'Addition max power must be ≥ min power'
-                }
-            }
-        },
-        cylindrical: {
-            min: {
-                type: Number,
-                validate: {
-                    validator: function () {
-                        const max = (this as any).power_range?.cylindrical?.max;
-                        return max == null || (this as any).power_range.cylindrical.min <= max;
-                    },
-                    message: 'Cylindrical min power must be ≤ max power'
-                }
-            },
-            max: {
-                type: Number,
-                validate: {
-                    validator: function () {
-                        const min = (this as any).power_range?.cylindrical?.min;
-                        return min == null || min <= (this as any).power_range.cylindrical.max;
-                    },
-                    message: 'Cylindrical max power must be ≥ min power'
-                }
-            }
-        },
-
-
     },
 }, { _id: true })
 
-
-contactLensSchema.add({
-    type: { type: String, default: "ContactLens" },
+colorContactLensSchema.add({
+    type: { type: String, default: "ColorContactLens" },
     contact_lens_cover: { type: Boolean },
     size: [String],
-    variant: [baseVariantSchema],
+    variants: [baseVariantSchema],
     lens_type: {
         type: String,
         enum: {
-            values: ['toric', 'non_toric', 'multi_focal'],
+            values: ['zero_power', 'power',],
             message: '{VALUE} is not a valid lens type'
         },
         required: [true, 'Lens type is required']
     },
 })
 
-
-contactLensSchema.index({
+colorContactLensSchema.index({
     brand_name: 'text',
     vendorId: 1
 })
 
-export const ContactLens = mongoose.model("ContactLens", contactLensSchema)
+export const ColorContactLens = mongoose.model("ColorContactLens", colorContactLensSchema)

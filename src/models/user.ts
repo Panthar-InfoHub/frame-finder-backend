@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
         trim: true,
         select: false
     },
+    wallet_point: {
+        type: Number,
+        default: 0
+    },
     prescription: {
         type: mongoose.Schema.Types.Mixed
     },

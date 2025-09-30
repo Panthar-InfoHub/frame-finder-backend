@@ -1,11 +1,9 @@
 import mongoose, { Document } from "mongoose";
 import { baseProductSchema } from "./products.js";
-import { generateReadableProductCode } from "../lib/helper.js";
 
 interface ISunglass extends Document {
     productCode: string;
     brand_name: string;
-    desc: string;
     variants: Array<{
         frame_color: string[];
         temple_color: string[];
@@ -38,18 +36,20 @@ interface ISunglass extends Document {
 const sunglassSchema = baseProductSchema.clone()
 
 sunglassSchema.add({
-    is_Power: {
-        type: Boolean,
-        default: false
-    },
+    is_Power: { type: Boolean, default: false },
     type: { type: String, default: "Sunglass" },
     variants: [{
-        frame_color: [String],
-        temple_color: [String],
-        lens_color: [String],
+                frame_color: { type: String },
+        temple_color: { type: String },
+                lens_color: { type: String },
         price: {
             base_price: { type: Number, required: true },
             mrp: { type: Number, required: true },
+            shipping_price: {
+                custom: { type: Boolean, default: false },
+                value: { type: Number, default: 0 }
+            },
+            total_price: { type: Number, required: true }
         },
         images: [
             { url: { type: String, trim: true } }
@@ -71,16 +71,7 @@ sunglassSchema.add({
 
 sunglassSchema.index({
     brand_name: 'text',
-    desc: 'text',
     vendorId: 1
 })
-
-// Generate product ID before saving
-sunglassSchema.pre<ISunglass>('validate', async function (next) {
-    if (this.isNew && !this.productCode) {
-        this.productCode = generateReadableProductCode("SUNGLS");
-    }
-    next();
-});
 
 export const Sunglass = mongoose.model<ISunglass>("Sunglass", sunglassSchema);

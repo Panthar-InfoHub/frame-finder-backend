@@ -9,20 +9,21 @@ import { errorHandler } from "./middlwares/ErrorMiddleware.js"
 import { accessoriesRouter } from "./routes/accessories-route.js"
 import { adminRoutes } from "./routes/admin-routes.js"
 import { authRouter } from "./routes/auth-routes.js"
-import { categoryRouter } from "./routes/category-routes.js"
 import { contactLensRouter } from "./routes/contact-lens-route.js"
 import { dataRouter } from "./routes/data-routes.js"
 import { lensPackageRouter } from "./routes/lens-package-routes.js"
 import { miscRouter } from "./routes/misc-routes.js"
+import { orderRouter } from "./routes/order-routes.js"
 import { productRouter } from "./routes/product-routes.js"
 import { sunglassLensPackageRouter } from "./routes/sunglass-package-routes.js"
 import { sunglassRouter } from "./routes/sunglass-routes.js"
+import { vendorAnalyticRouter } from "./routes/vendor-analytics-route.js"
 import { vendorMiscRouter } from "./routes/vendor-misc-routes.js"
 import { vendorRouter } from "./routes/vendor-routes.js"
 import { vendorRequestRoutes } from "./routes/vendor_request.js"
 import { wishlistRouter } from "./routes/wishlist-routes.js"
-import { vendorAnalyticRouter } from "./routes/vendor-analytics-route.js"
-import { orderRouter } from "./routes/order-routes.js"
+import { readerRouter } from "./routes/reader-route.js"
+import { clrContactLensRouter } from "./routes/color-contact-lens-route.js"
 
 //Configurations
 const app = express()
@@ -45,7 +46,6 @@ app.use("/api/v1/data", dataRouter);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/vendor", vendorRouter);
 app.use("/api/v1/wishlist", wishlistRouter);
-app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/vendor-misc", vendorMiscRouter);
 app.use("/api/v1/vendor-request", vendorRequestRoutes);
 
@@ -55,6 +55,8 @@ app.use("/api/v1/order", orderRouter);
 //Products Api Routes
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/sunglass", sunglassRouter);
+app.use("/api/v1/reader", readerRouter);
+app.use("/api/v1/color-contact-lens", clrContactLensRouter);
 app.use("/api/v1/contact-lens", contactLensRouter);
 app.use("/api/v1/accessories", accessoriesRouter);
 app.use("/api/v1/lens-package", lensPackageRouter);
