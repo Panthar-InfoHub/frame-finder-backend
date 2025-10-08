@@ -4,6 +4,7 @@ import { Admin } from "../models/Admin.js";
 import { Vendor } from "../models/Vendor.js";
 import { generateTokens } from "../lib/uitils.js";
 import AppError from "../middlwares/Error.js";
+import { User } from "../models/user.js";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -66,6 +67,32 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
                     success: false,
                     message: "Invalid password, check your credentials..."
                 });
+            }
+        }
+
+        if (type === "USER") {
+            user = await User.findOne({ $or: [{ email: loginId }, { phone: loginId }] }).select("+password");;
+
+            console.debug("User lookup result ==> ", user);
+
+            if (!user) {
+                console.warn("\nUser not found, check your credentials...");
+                return res.status(401).send({
+                    success: false,
+                    message: "User not found, check your credentials..."
+                });
+            }
+
+            let isPasswordCorrect = false;
+            if (password) {
+                isPasswordCorrect = await user.comparePassword(password);
+                if (!isPasswordCorrect) {
+                    console.warn("\nInvalid password, check your credentials...");
+                    return res.status(401).send({
+                        success: false,
+                        message: "Invalid password, check your credentials..."
+                    });
+                }
             }
         }
 
@@ -163,8 +190,8 @@ export const userPhoneVerified = async (req: Request, res: Response, next: NextF
         }
 
         res.status(200).send({
-            success:true,
-            message : "Vendor with phone number exist",
+            success: true,
+            message: "Vendor with phone number exist",
         });
         return;
 

@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { wishlistService } from "../services/wishlist-service.js";
+import AppError from "../middlwares/Error.js";
 
 export const addItemInWishlist = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -12,10 +13,10 @@ export const addItemInWishlist = async (req: Request, res: Response, next: NextF
         console.debug("User ID for adding item in wishlist:", userId);
         console.debug("\nItem to add:", item);
 
-        // if (!req.user || userId !== req.user.id) {
-        //     console.warn("User ID does not match authenticated user");
-        //     throw new AppError("User ID does not match authenticated user", 403)
-        // }
+        if (!req.user || userId !== req.user.id) {
+            console.warn("User ID does not match authenticated user");
+            throw new AppError("User ID does not match authenticated user", 403)
+        }
         //Product Validity check - Optional for future engineer
 
         const result = await wishlistService.addItemToWishlist(userId, item);

@@ -20,10 +20,11 @@ import { sunglassRouter } from "./routes/sunglass-routes.js"
 import { vendorAnalyticRouter } from "./routes/vendor-analytics-route.js"
 import { vendorMiscRouter } from "./routes/vendor-misc-routes.js"
 import { vendorRouter } from "./routes/vendor-routes.js"
-import { vendorRequestRoutes } from "./routes/vendor_request.js"
 import { wishlistRouter } from "./routes/wishlist-routes.js"
 import { readerRouter } from "./routes/reader-route.js"
 import { clrContactLensRouter } from "./routes/color-contact-lens-route.js"
+import { userRouter } from "./routes/user-routes.js"
+import { couponRouter } from "./routes/coupon-routes.js"
 
 //Configurations
 const app = express()
@@ -43,13 +44,14 @@ if (process.env.ENVIROMENT === "dev") {
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/misc", miscRouter);
 app.use("/api/v1/data", dataRouter);
+app.use("/api/v1/user", userRouter);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/vendor", vendorRouter);
 app.use("/api/v1/wishlist", wishlistRouter);
 app.use("/api/v1/vendor-misc", vendorMiscRouter);
-app.use("/api/v1/vendor-request", vendorRequestRoutes);
 
 //Order Routes
+app.use("/api/v1/coupon", couponRouter);
 app.use("/api/v1/order", orderRouter);
 
 //Products Api Routes

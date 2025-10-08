@@ -2,7 +2,11 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt"
 
 const userSchema = new mongoose.Schema({
-    name: {
+    first_name: {
+        type: String,
+        trim: true
+    },
+    last_name: {
         type: String,
         trim: true
     },
@@ -20,6 +24,14 @@ const userSchema = new mongoose.Schema({
         unique: true,
         match: [/\S+@\S+\.\S+/, 'Please provide a valid email'],
     },
+    gender: {
+        type: String,
+        trim: true,
+        enum: {
+            values: ['male', 'female', 'others'],
+            message: '{VALUE} is not a valid status'
+        }
+    },
     password: {
         type: String,
         trim: true,
@@ -32,12 +44,12 @@ const userSchema = new mongoose.Schema({
     prescription: {
         type: mongoose.Schema.Types.Mixed
     },
-    address: {
+    address: [{
         address_line_1: String,
         city: String,
         state: String,
         pincode: String,
-    },
+    }],
     isActive: {
         type: Boolean,
         default: true
@@ -45,7 +57,13 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         default: "USER"
-    }
+    },
+    //Fcm token ==> for future notification in app
+    // fcm_token: {
+    //     type: String,
+    //     trim: true,
+    //     select: false
+    // }
 }, { timestamps: true })
 
 userSchema.pre('validate', async function (next): Promise<void> {
@@ -55,5 +73,9 @@ userSchema.pre('validate', async function (next): Promise<void> {
     }
     next();
 });
+
+userSchema.methods.comparePassword = async function (password: string) {
+    return await bcrypt.compare(password, this.password);
+}
 
 export const User = mongoose.model('User', userSchema)

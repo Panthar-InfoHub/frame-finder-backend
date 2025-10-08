@@ -62,7 +62,7 @@ export class ProductService<T extends IProduct> {
         console.debug("\nLimit for products: ", limit);
 
         const [products, totalProducts] = await Promise.all([
-            this.model.find(filter).skip(skip).limit(limit),
+            this.model.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
             this.model.countDocuments(filter)
         ]);
 

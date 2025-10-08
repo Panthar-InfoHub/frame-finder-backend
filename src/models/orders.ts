@@ -5,6 +5,7 @@ const orderItemSchema = new mongoose.Schema({
     productId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
+        refPath: 'onModel'
     },
     onModel: {
         type: String,
@@ -38,6 +39,22 @@ const orderItemSchema = new mongoose.Schema({
         package_design: { type: String },
         package_price: { type: Number }
     },
+    product_snapshot: {
+        productCode: { type: String, required: true },
+        brand_name: { type: String },
+        // Store the variant details that were purchased
+        variant_details: {
+            total_price: Number,
+            frame_color: String,
+            temple_color: String,
+            image_url: String
+        },
+    },
+
+    vendor_snapshot: {
+        business_name: { type: String },
+        business_owner: { type: String },
+    },
 }, { _id: true });
 
 
@@ -50,9 +67,14 @@ const orderSchema = new mongoose.Schema({
         ref: 'Users',
         required: true
     },
+    user_snapshot: {
+        name: { type: String, required: true },
+        email: { type: String, required: true },
+        phone: { type: String, required: true },
+    },
     items: [orderItemSchema],
 
-    paymentAttempts: [{
+    payment_attempts: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Payment'
     }],
@@ -63,7 +85,7 @@ const orderSchema = new mongoose.Schema({
         pincode: String,
         phone: { type: String, required: true }
     },
-    orderStatus: {
+    order_status: {
         type: String,
         enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
         default: 'pending',
@@ -73,9 +95,10 @@ const orderSchema = new mongoose.Schema({
         trim: true
     },
 
-    totalAmount: { type: Number, required: true },
+    total_amount: { type: Number, required: true },
     tax: { type: Number, default: 0 },
-    shippingCost: { type: Number, default: 0 },
+    shipping_cost: { type: Number, default: 0 },
+    coupon_code: { type: String, trim: true, uppercase: true, default: "" },
     discount: { type: Number, default: 0 },
 
 }, { timestamps: true });
