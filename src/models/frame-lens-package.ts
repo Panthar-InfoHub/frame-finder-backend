@@ -1,13 +1,16 @@
 import mongoose from "mongoose";
 
 export const baseLensPackageSchema = new mongoose.Schema({
-    packageCode: {
+    productCode: {
         type: String,
         unique: true,
     },
-    company: {
+    display_name: {
         type: String,
-        required: true,
+        trim: true
+    },
+    brand_name: {
+        type: String,
         trim: true
     },
     vendorId: {
@@ -15,33 +18,15 @@ export const baseLensPackageSchema = new mongoose.Schema({
         ref: "Vendor",
         required: true,
     },
-    package_design: {
-        type: String,
-        required: true,
-        trim: true
-    },
     index: {
         type: String,
         required: true,
     },
-    stock: {
-        current: {
-            type: Number,
-            default: 0,
-            min: 0
-        },
-        minimum: {
-            type: Number,
-            default: 5,
-            min: 0
-        },
+    price: {
+        mrp: { type: Number, required: true },
+        base_price: { type: Number, required: true },
+        total_price: { type: Number, required: true }
     },
-}, { timestamps: true });
-
-const lensPackageSchema = baseLensPackageSchema.clone();
-
-lensPackageSchema.add({
-    price: { type: Number, required: true, },
     images: [
         {
             url: {
@@ -50,17 +35,25 @@ lensPackageSchema.add({
             }
         }
     ],
-    package_type: { type: String, required: true, trim: true },
+    duration: { type: Number, required: [true, "Duration is required"] },
+    prescription_type: {
+        type: String,
+        trim: true,
+        required: [true, 'Prescription type is required'],
+        enum: {
+            values: ['single_vision', 'bi_focal', 'multi_focal'],
+            message: '{VALUE} is not a valid prescription type'
+        },
+    },
+}, { timestamps: true });
+
+const lensPackageSchema = baseLensPackageSchema.clone();
+
+lensPackageSchema.add({
+    lens_type: { type: String, required: true, trim: true, unique: true, lowercase: true },
 })
 
 lensPackageSchema.index({ vendorId: 1, package_design: 1, package_type: 1 })
 
-// Generate package Code before saving
-// lensPackageSchema.pre('validate', async function (next) {
-//     if (this.isNew && !this.packageCode) {
-//         this.packageCode = generateReadableProductCode("LPKG");
-//     }
-//     next();
-// });
 
 export const LensPackage = mongoose.model("LensPackage", lensPackageSchema)

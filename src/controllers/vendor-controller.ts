@@ -44,7 +44,7 @@ export const getAllVendors = async (req: Request, res: Response, next: NextFunct
         }
 
         const [vendors, totalCount] = await Promise.all([
-            Vendor.find(filter).skip(skip).limit(limit).select("-__v -password").sort({ createdAt: -1 }),
+            Vendor.find(filter).skip(skip).limit(limit).select("-__v -password").sort({ createdAt: -1 }).lean(),
             Vendor.countDocuments(filter)
         ]);
 

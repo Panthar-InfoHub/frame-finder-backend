@@ -1,200 +1,193 @@
 import { NextFunction, Request, Response } from "express";
-import { LensPackageService } from "../services/lens-package-service.js";
-import { LensPackage } from "../models/frame-lens-package.js";
+import { Model } from "mongoose";
 import AppError from "../middlwares/Error.js";
+import { LensPackageClass } from "../services/lens-package-service.js";
 
-export const createLensPackage = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        console.debug("requested data for lens package creation  ==> ", req.body);
+export class LensPackageController {
 
-        const vendorId = req.user?.id;
-        console.debug("Vendor Id for creating lens package  ==> ", req.user?.id);
-
-
-        const lensPackage = await LensPackageService.createLensPackage({ ...req.body, vendorId })
-        console.debug("\n lens package ==> ", lensPackage)
-
-        res.status(201).send({
-            success: true,
-            message: "Lens package created successfully",
-            lensPackage: lensPackage
-        });
-        return;
-    } catch (error) {
-        console.error("Error creating lens package:", error);
-        next(error);
-        return;
+    lensPackageService: LensPackageClass;
+    modelName: string;
+    constructor(model: Model<any>, modelName: string) {
+        this.lensPackageService = new LensPackageClass(model, modelName);
+        this.modelName = modelName;
     }
-}
 
-export const updateLensPackage = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const lensPackageId = req.params.id;
-        const updateData = req.body;
+    //Create Lens Package
+    createLensPackage = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            console.debug("requested data for lens package creation  ==> ", req.body);
 
-        const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ? "" : req.user?.id
-        //Authorized vendor check already done in auth middleware
+            const vendorId = req.user?.id;
+            console.debug(`Vendor Id for creating ${this.modelName} ==> ${req.user?.id}`);
 
-        const query: any = { _id: lensPackageId }
-        if (vendorId) {
-            query.vendorId = vendorId
-        }
-        const updatedLensPackage = await LensPackageService.updateLensPackage(query, updateData);
 
-        if (!updatedLensPackage) {
-            console.warn("\n Lens package not found or you do not have permission to update it")
-            return res.status(404).json({
-                success: false,
-                message: "Lens package not found or you do not have permission to update it"
+            const lensPackage = await this.lensPackageService.createLensPackage({ ...req.body, vendorId })
+            console.debug(`\n ${this.modelName} ==> ${lensPackage}`)
+
+            res.status(201).send({
+                success: true,
+                message: `${this.modelName} created successfully`,
+                lensPackage: lensPackage
             });
+            return;
+        } catch (error) {
+            console.error(`Error creating ${this.modelName}:`, error);
+            next(error);
+            return;
         }
-
-        console.debug("\n updated lens package ==> ", updatedLensPackage)
-
-        res.status(200).json({
-            success: true,
-            message: "Lens package updated successfully",
-            data: updatedLensPackage
-        });
-    } catch (error) {
-        console.error("Error updating lens package:", error);
-        next(error);
-        return;
     }
-};
+    updateLensPackage = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const lensPackageId = req.params.id;
+            const updateData = req.body;
 
-export const getLensPackagebyID = async (req: Request, res: Response, next: NextFunction) => {
-    try {
+            const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ? "" : req.user?.id
+            //Authorized vendor check already done in auth middleware
 
-        const lensPkgId = req.params.id;
-        console.debug("\n Lens package id for searching ==> ", lensPkgId);
-
-        const lensPkg = await LensPackage.findById(lensPkgId).populate("vendorId", "business_name email phone logo");
-
-        if (!lensPkg) {
-            console.warn("Lens Package not found");
-            throw new AppError("Lens package not found", 404);
-        }
-
-        console.debug("Lens package found ==> ", lensPkg)
-        res.status(200).send({
-            success: true,
-            message: 'Lens Package fetched successfully',
-            data: lensPkg
-        })
-        return;
-
-    } catch (error) {
-        console.error("Error while fetching sunglasses by id ==> ", error);
-        next(error);
-        return;
-    }
-}
-
-//Get all lens package all : for admin , limited by vendor Id
-export const getAllLensPackage = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-
-        const page = parseInt(req.query.page as string) || 1
-        const limit = parseInt(req.query.limit as string) || 30
-        const packageCode = req.query.code as string
-        const vendorId = req.query.vendorId as string
-
-        console.debug(`Gell all lens package params \nPage: ${page}, Limit: ${limit}, Package Code: ${packageCode}`);
-
-        const skip = (page - 1) * limit;
-
-        // const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ?  : req.user?.id
-        const query: any = {};
-
-        //Assign package code if provided
-        if (packageCode) {
-            query.packageCode = packageCode;
-        }
-
-        if (["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string)) {
+            const query: any = { _id: lensPackageId }
             if (vendorId) {
                 query.vendorId = vendorId
             }
-        } else if (req.user?.role === "VENDOR") {
+            const updatedLensPackage = await this.lensPackageService.updateLensPackage(query, updateData);
 
-            if (vendorId && req.user?.id !== vendorId) {
-                console.warn(`Vendor ${req.user?.id} attempted to access other vendor's data`);
-                return res.status(400).send({
-                    succcess: false,
-                    message: `Vendor ${req.user?.id} attempted to access other vendor's data`
-                })
-            } else {
-                query.vendorId = req.user?.id
+            if (!updatedLensPackage) {
+                console.warn(`\n ${this.modelName} not found or you do not have permission to update it`)
+                return res.status(404).json({
+                    success: false,
+                    message: `${this.modelName} not found or you do not have permission to update it`
+                });
             }
-        }
 
-        console.debug("\nQuery for fetching lens packages ==>  ", query);
+            console.debug(`\n updated ${this.modelName} ==> ${updatedLensPackage}`)
 
-        const [lensPackages, total] = await Promise.all([
-            LensPackage.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).populate("vendorId", "business_name email phone business_owner"),
-            LensPackage.countDocuments(query)
-        ]);
-
-        console.debug("\nFetched lens packages ==> ", lensPackages);
-        console.debug("\nTotal lens packages count ==> ", total);
-
-        res.status(200).send({
-            success: true,
-            message: "Lens packages fetched successfully",
-            data: {
-                lensPackages,
-                pagination: {
-                    total,
-                    totalPages: Math.ceil(total / limit)
-                }
-            }
-        });
-        return;
-
-
-    } catch (error) {
-        console.error("Error geting all lens package:", error);
-        next(error);
-        return;
-    }
-}
-
-//Delete Lens Package
-export const deleteLensPackage = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-
-        const packageId = req.params.id
-        console.debug("\nDeleting lens package with ID ==> ", packageId);
-
-        const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ? "" : req.user?.id
-        const query: any = { _id: packageId };
-
-        vendorId && (query.vendorId = vendorId)
-        console.debug("\nQuery for fetching lens packages ==>  ", query);
-
-        const lensPackage = await LensPackage.findOneAndDelete(query)
-
-        if (!lensPackage) {
-            console.warn(`Lens package with ID ${packageId} not found or not authorized to delete`);
-            res.status(404).send({
-                success: false,
-                message: "Lens package not found"
+            res.status(200).json({
+                success: true,
+                message: `${this.modelName} updated successfully`,
+                data: updatedLensPackage
             });
+        } catch (error) {
+            console.error(`Error updating ${this.modelName}:`, error);
+            next(error);
             return;
         }
+    };
 
-        console.debug("\n Lens package deleted ==> ", lensPackage)
+    getLensPackagebyID = async (req: Request, res: Response, next: NextFunction) => {
+        try {
 
-        res.status(200).send({
-            success: true,
-            message: "Lens package deleted",
-            data: lensPackage
-        })
+            const lensPkgId = req.params.id;
+            console.debug(`\n ${this.modelName} id for searching ==> ${lensPkgId}`);
 
-    } catch (error) {
-        console.error("Deleting lens package:", error);
-        next(error);
-        return;
+            const lensPkg = await this.lensPackageService.getLensPackageById(lensPkgId);
+
+            if (!lensPkg) {
+                console.warn(`${this.modelName} not found`);
+                throw new AppError("Lens package not found", 404);
+            }
+
+            console.debug(`${this.modelName} found ==> ${lensPkg}`)
+            res.status(200).send({
+                success: true,
+                message: `${this.modelName} fetched successfully`,
+                data: lensPkg
+            })
+            return;
+
+        } catch (error) {
+            console.error(`Error while fetching ${this.modelName} by id ==> ${error}`);
+            next(error);
+            return;
+        }
+    }
+
+    //Get all lens package all : for admin , limited by vendor Id
+    getAllLensPackage = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+
+            const page = parseInt(req.query.page as string) || 1
+            const limit = parseInt(req.query.limit as string) || 30
+            const productCode = req.query.code as string
+            const vendorId = req.query.vendorId as string
+
+            console.debug(`Gell all ${this.modelName} params \nPage: ${page}, Limit: ${limit}, Product Code: ${productCode}`);
+
+            const skip = (page - 1) * limit;
+
+            // const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ?  : req.user?.id
+            const query: any = {};
+
+            //Assign package code if provided
+            if (productCode) {
+                query.productCode = productCode;
+            }
+
+            if (["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string)) {
+                if (vendorId) {
+                    query.vendorId = vendorId
+                }
+            } else if (req.user?.role === "VENDOR") {
+                if (vendorId && req.user?.id !== vendorId) {
+                    console.warn(`Vendor ${req.user?.id} attempted to access other vendor's data`);
+                    throw new AppError(`Vendor ${req.user?.id} attempted to access other vendor's data`, 400);
+                } else {
+                    query.vendorId = req.user?.id
+                }
+            }
+
+            console.debug(`\nQuery for fetching ${this.modelName} ==>  ${query}`);
+
+            const data = await this.lensPackageService.getAllLensPackage(query, skip, limit);
+
+            console.debug(`\nFetched ${this.modelName} ==> ${data.lensPackages}`);
+            console.debug(`\nTotal ${this.modelName} count ==> ${data.total}`);
+
+            res.status(200).send({
+                success: true,
+                message: `${this.modelName} fetched successfully`,
+                data
+            });
+            return;
+
+
+        } catch (error) {
+            console.error(`Error geting all ${this.modelName}:`, error);
+            next(error);
+            return;
+        }
+    }
+
+    //Delete Lens Package
+    deleteLensPackage = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+
+            const packageId = req.params.id
+            console.debug(`\nDeleting ${this.modelName} with ID ==> ${packageId}`);
+
+            const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ? "" : req.user?.id
+            const query: any = { _id: packageId };
+
+            vendorId && (query.vendorId = vendorId)
+            console.debug(`\nQuery for fetching ${this.modelName} ==>  ${query}`);
+
+            const lensPackage = await this.lensPackageService.deleteLensPackage(query)
+
+            if (!lensPackage) {
+                console.warn(`${this.modelName} with ID ${packageId} not found or not authorized to delete`);
+                throw new AppError("Lens package not found", 404);
+            }
+
+            console.debug(`\n ${this.modelName} deleted ==> ${lensPackage}`)
+
+            res.status(200).send({
+                success: true,
+                message: `${this.modelName} deleted`,
+                data: lensPackage
+            })
+
+        } catch (error) {
+            console.error(`Deleting ${this.modelName}:`, error);
+            next(error);
+            return;
+        }
     }
 }

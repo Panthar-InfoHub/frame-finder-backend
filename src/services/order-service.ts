@@ -2,57 +2,68 @@ import mongoose from "mongoose";
 import AppError from "../middlwares/Error.js";
 import { wishlistService } from "./wishlist-service.js";
 import { Order } from "../models/orders.js";
+import { userService } from "./user-services.js";
+import { create_order_items } from "../lib/helper.js";
 
 
 class OrderClass {
     async createOrder(userId: string, orderData: any) {
 
-        const { tax, shipping_address, shippingCost, discount } = orderData
+        const { tax, shipping_address, shipping_cost, discount, coupon_code } = orderData
         const session = await mongoose.startSession();
 
         try {
             const result = await session.withTransaction(async () => {
 
                 console.debug("Getting wishlist of user...")
+
+                //User and wishlist check : 
+                // No user -> throw error of User not found 
+                // No wishlist items --> Can't create empty order : Error of cart is empty 
+                const user = await userService.getUserById(userId);
+                if (!user) {
+                    console.error("No user found for this user id ==> ", userId)
+                    throw new AppError(`No user found for this user id ==> ${userId}`, 400);
+                }
+
                 const wishListItems = await wishlistService.getWishlistByUser(userId);
                 if (wishListItems.length === 0) {
                     throw new AppError("Cart is empty, can't create order", 400);
                 }
 
-                const orderItems = wishListItems.map((item) => ({
-                    productId: item.product.vendorId,
-                    onModel: item.onModel,
-                    variantId: item.variant._id,
-                    vendorId: item.product.vendorId,
-                    productName: item.product.brand_name,
-                    price: item.variant.price.base_price,
-                    quantity: item.quantity,
-                    prescription: item.prescription,
-                    lens_package_detail: item.lens_package_detail
-                }))
-
+                //Modifying the items as per needed in order : adding snapshot and details
+                const orderItems = create_order_items(wishListItems);
                 console.debug(`\n Order items mapped properly for creation ==> ${JSON.stringify(orderItems, null, 2)}`)
 
+                //Calculating cost : subtotal and total amount --> Create order
                 const subTotal = orderItems.reduce((sum, item) => {
                     return sum + (item.price * item.quantity)
                 }, 0);
-                const totalAmount = (subTotal + tax + shippingCost) - discount;
+
+                // Verify coupon code and calculate discount
+
+                const totalAmount = (subTotal + tax + shipping_cost) - discount;
                 console.debug(`Total amount ==> ${totalAmount}`)
 
                 const order = new Order({
                     userId,
+                    user_snapshot: {
+                        email: user.email || "test_mail",
+                        name: `${user.first_name} - ${user.last_name}` || "test_name",
+                        phone: user.phone || "1200"
+                    },
                     items: orderItems,
                     shipping_address,
-                    totalAmount,
+                    total_amount: totalAmount,
                     tax,
-                    shippingCost,
+                    coupon_code:
+                        shipping_cost,
                     discount
                 })
 
                 await order.save({ session })
-                console.debug(`Order created successfully ==> ${order}`);
-
                 await wishlistService.clearWishlist(userId);
+                console.debug(`Order created successfully ==> ${order}`);
                 console.debug(`\n Wishlist cleared of user after order creation...`)
 
                 return order;
@@ -99,7 +110,7 @@ class OrderClass {
         const filter: any = { _id: orderId, userId };
 
         const order = await Order.findOne(filter)
-            // .populate('paymentAttempts') //Enable later
+            .populate('payment_attempts') //Enable later
             .lean();
 
         if (!order) {
@@ -108,19 +119,20 @@ class OrderClass {
         return order;
     }
 
+    // Updated order : Status , tracking id's and Payment attempt
     async updateOrderStatus(orderId: string, statusData: any) {
-        const { orderStatus, tracking_id, paymentAttemptId } = statusData;
+        const { order_status, tracking_id, paymentAttemptId } = statusData;
 
         const updateFields: any = {};
 
-        if (orderStatus) updateFields.orderStatus = orderStatus;
+        if (order_status) updateFields.orderStatus = order_status;
         if (tracking_id) updateFields.tracking_id = tracking_id;
-        if (paymentAttemptId) updateFields.$push = { paymentAttempts: paymentAttemptId };
+        if (paymentAttemptId) updateFields.$push = { payment_attempts: paymentAttemptId };
 
 
         const updatedOrder = await Order.findByIdAndUpdate(
             orderId,
-            updateFields,
+            { $set: updateFields },
             { new: true, runValidators: true }
         );
 
@@ -143,7 +155,7 @@ class OrderClass {
         }
 
         if (vendorId) query["items.vendorId"] = vendorId;
-        if (status) query.orderStatus = status;
+        if (status) query.order_status = status;
         if (userId) query.userId = userId;
 
         // Date range
@@ -158,7 +170,7 @@ class OrderClass {
                 .sort({ createdAt: -1 })
                 .limit(Number(limit))
                 .skip((Number(page) - 1) * Number(limit))
-                // .populate('paymentAttempts')
+                // .populate('-payment_attempts')
                 .lean(),
             Order.countDocuments(query)
         ])

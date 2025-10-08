@@ -5,6 +5,7 @@ import { NextFunction, Request, Response } from "express";
 import { UserRole } from "./roleCheck.js";
 import { Vendor } from "../models/Vendor.js";
 import AppError from "./Error.js";
+import { User } from "../models/user.js";
 
 interface resData {
     id: string,
@@ -31,14 +32,15 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
 
         console.debug("\n Decoded data ==> ", decoded)
 
-       let user; // This will hold either an Admin or a Vendor document
+        let user; // This will hold either an Admin, Vendor or User document
 
         if (decoded.role === "ADMIN" || decoded.role === "SUPER_ADMIN") {
             user = await Admin.findById(decoded.id);
         } else if (decoded.role === "VENDOR") {
             user = await Vendor.findById(decoded.id);
         } else {
-            throw new AppError('Unsupported user role in token.', 401);
+            user = await User.findById(decoded.id);
+            // throw new AppError('Unsupported user role in token.', 401);
         }
 
         if (!user) {
@@ -50,15 +52,6 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         resData.role = user.role;
 
         console.debug("User data from token ==> ", resData)
-
-        // const  = await UserRepository.findById(decoded.id); --> For user
-
-        // if (!user || !user.isActive) {
-        //     return res.status(401).json({
-        //         success: false,
-        //         message: 'Invalid token or user not found'
-        //     });
-        // }
 
         req.user = {
             id: resData.id,

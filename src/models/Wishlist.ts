@@ -4,12 +4,12 @@ const itemSchema = new mongoose.Schema({
     product: {
         type: mongoose.Schema.Types.ObjectId,
         required: [true, "Product ID is required"],
-        refPath: 'onModel'
+        refPath: 'items.onModel'
     },
     onModel: {
         type: String,
         required: true,
-        enum: ['Sunglass', 'Product', 'ContactLens', 'Accessories']
+        enum: ['Sunglass', 'Product', 'ContactLens', 'ColorContactLens', 'Reader', 'Accessories']
     },
 
     variant: {

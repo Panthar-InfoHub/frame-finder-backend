@@ -82,11 +82,15 @@ class WishlistService {
     }
 
     async getWishlistByUser(userId: string) {
-        // Get the wishlist document and populate the product details
+        // Get the wishlist document and populate the product details and vendor inside product
         const wishlist = await WishList.findOne({ userId }).populate({
             path: "items.product",
             match: { status: 'active' },
-            select: 'brand_name productCode variants vendorId'
+            select: 'brand_name productCode variants vendorId',
+            populate: {
+                path: 'vendorId',
+                select: 'business_name business_owner'
+            }
         }).lean();
 
         if (!wishlist || wishlist.items.length === 0) {
@@ -95,27 +99,14 @@ class WishlistService {
 
         console.debug(`\n Wishlist ==> ${JSON.stringify(wishlist, null, 2)}`);
 
-        // Process the items to structure the final response
+        // Process the items to structure the final response : For all items in wishlist
+        // Basically filter the corrected variant among all the variant of producty as per the wishlist variant id
         const populatedItems = await Promise.all(
-            wishlist.items.map(async (item) => {
-
+            wishlist.items.map(async (item: any) => {
                 try {
-                    const Model = mongoose.model(item.onModel);
-
-                    const product: any = await Model.findOne({
-                        _id: item.product,
-                        status: 'active'
-                    }).select('brand_name productCode variants vendorId').lean();
-
-                    if (!product) {
-                        console.log(`Product ${item.product} not found or not active`);
-                        return null;
-                    }
-
-                    const variant = product.variants?.find(
+                    const variant = item.product.variants?.find(
                         (v: any) => v._id.toString() === item.variant?.toString()
                     );
-
                     if (!variant) {
                         console.log(`Variant ${item.variant} not found`);
                         return null;
@@ -124,10 +115,10 @@ class WishlistService {
                     return {
                         _id: item._id,
                         product: {
-                            id: product._id,
-                            brand_name: product.brand_name,
-                            productCode: product.productCode,
-                            vendorId: product.vendorId
+                            id: item.product._id,
+                            brand_name: item.product.brand_name,
+                            productCode: item.product.productCode,
+                            vendorId: item.product.vendorId
                         },
                         onModel: item.onModel,
                         variant,
@@ -142,8 +133,8 @@ class WishlistService {
             })
         );
 
-        console.debug(`\n Populated items ==> ${populatedItems}`);
-        const filteredItems = populatedItems.filter(item => item !== null);
+        console.debug(`\n Populated items ==> ${JSON.stringify(populatedItems, null, 2)}`);
+        const filteredItems = populatedItems.filter(item => item !== null); //
 
         return filteredItems;
     }
