@@ -39,9 +39,9 @@ sunglassSchema.add({
     is_Power: { type: Boolean, default: false },
     type: { type: String, default: "Sunglass" },
     variants: [{
-                frame_color: { type: String },
+        frame_color: { type: String },
         temple_color: { type: String },
-                lens_color: { type: String },
+        lens_color: { type: String },
         price: {
             base_price: { type: Number, required: true },
             mrp: { type: Number, required: true },

@@ -17,14 +17,14 @@ export class ContactLensService extends ProductService<IProduct> {
         delete updateData.stock;
 
         const updateObject = Object.keys(updateData).reduce((acc, key) => {
-            acc[`variants.$.${key}`] = updateData[key];
+            acc[`variant.$.${key}`] = updateData[key];
             return acc;
         }, {} as any);
 
         console.debug("Updated object ==> ", updateObject)
 
         const product = await this.model.findOneAndUpdate(
-            { _id: id, "variants._id": variantId },
+            { _id: id, "variant._id": variantId },
             { $set: updateObject },
             { new: true }
         );
@@ -42,8 +42,8 @@ export class ContactLensService extends ProductService<IProduct> {
         const finalQuantity = operation === "increase" ? Math.abs(quantity) : -Math.abs(quantity);
 
         const product = await this.model.findOneAndUpdate(
-            { _id: id, "variants._id": variantId },
-            { $inc: { "variants.$.stock.current": finalQuantity } },
+            { _id: id, "variant._id": variantId },
+            { $inc: { "variant.$.stock.current": finalQuantity } },
             { new: true }
         );
 
