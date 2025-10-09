@@ -122,7 +122,7 @@ export class LensController {
             return;
 
         } catch (error) {
-            console.error("Error updating product: ", error);
+            console.error("Error updating variant details: ", error);
             next(error);
             return;
         }
