@@ -14,7 +14,7 @@ lensSolutionSchema.remove([
 ]);
 
 lensSolutionSchema.add({
-    variant: [{
+    variants: [{
         sizes: {
             type: String,
             trim: true,

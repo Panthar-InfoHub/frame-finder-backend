@@ -68,7 +68,7 @@ export const updateAccessories = async (req: Request, res: Response, next: NextF
             delete updateData.stock
         }
 
-        const accessories = await Accessories.findByIdAndUpdate(AccessoriesId, updateData, { new: true });
+        const accessories = await Accessories.findByIdAndUpdate(AccessoriesId, { $set: updateData }, { new: true });
 
         if (!accessories) {
             console.warn(`Accessories with ID ${AccessoriesId} not found`);
@@ -120,7 +120,7 @@ export const updateAccessoriesStock = async (req: Request, res: Response, next: 
 
         console.debug("Update operation: ", updateOpn);
 
-        const accessories = await Accessories.findByIdAndUpdate(AccessoriesId, updateOpn, { new: true });
+        const accessories = await Accessories.findByIdAndUpdate(AccessoriesId, { $set: updateOpn }, { new: true });
 
         if (!accessories) {
             console.warn(`Accessories with ID ${AccessoriesId} not found`);
@@ -257,7 +257,7 @@ export const deleteAccessories = async (req: Request, res: Response, next: NextF
             })
         }
 
-        const accessories = await Accessories.findByIdAndUpdate(id, { status: 'inactive' }, { new: true });
+        const accessories = await Accessories.findByIdAndUpdate(id, { $set: { status: 'inactive' } }, { new: true });
 
         if (!accessories) {
             console.warn(`Accessories with ID ${id} not found`);

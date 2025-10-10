@@ -32,7 +32,7 @@ export class ProductService<T extends IProduct> {
     // Update product except stock
     async update(id: string, updateData: any) {
 
-        const product = await this.model.findByIdAndUpdate(id, updateData, { new: true });
+        const product = await this.model.findByIdAndUpdate(id, { $set: updateData }, { new: true });
         if (!product) {
             throw new AppError(`${this.modelName} not found`, 404);
         }

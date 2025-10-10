@@ -2,8 +2,22 @@ import mongoose from "mongoose";
 import AppError from "../middlwares/Error.js";
 import { Coupon } from "../models/coupon.js"
 import { Order } from "../models/orders.js";
+import { wishlistService } from "./wishlist-service.js";
+import { create_order_items, discount_price } from "../lib/helper.js";
 
 class CouponService {
+
+    private isSameVendorItem = async (userId: string, vendorId: string): Promise<Boolean> => {
+        const wishListItems = await wishlistService.getWishlistByUser(userId);
+        const ordered_items = create_order_items(wishListItems);
+
+        return ordered_items.every((item) =>
+            item.vendorId.toString() === vendorId.toString()
+        );
+
+    }
+
+
     createCoupon = async (data: any) => {
         return await Coupon.create(data);
     };
@@ -19,7 +33,10 @@ class CouponService {
             console.error(`\nCoupon not found with id ==> ${couponId}`)
             throw new AppError(`Coupon not found with id ==> ${couponId}`, 404);
         }
-        return coupon
+        return {
+            _id: coupon._id,
+            code: coupon.code
+        }
     };
 
     searchCoupon = async (query: any, pagination: { limit: number, skip: number }) => {
@@ -45,7 +62,7 @@ class CouponService {
     };
 
     getCouponById = async (couponId: string) => {
-        const coupon = await Coupon.findById(couponId);
+        const coupon = await Coupon.findById(couponId).populate("vendorId", "business_name business_owner");
 
         if (!coupon) {
             console.error(`\nCoupon not found with id ==> ${couponId}`)
@@ -61,57 +78,98 @@ class CouponService {
             console.error(`\nCoupon not found with id ==> ${couponId}`)
             throw new AppError(`Coupon not found with id ==> ${couponId}`, 404);
         }
-        return coupon
+        return {
+            _id: coupon._id,
+            code: coupon.code
+        }
     };
 
-    verifyCoupon = async (couponCode: string, vendorId: string, userId: string, orderAmount: number) => {
+    /**
+        * Main coupon verification function
+        * Pre verification coupon check for pre validation of coupon
+        * Invalid code - expiry - is active - min order amount
+    **/
+    preVerifyCouponCheck = async (couponCode: string, orderAmount: number) => {
+        const now = new Date();
+        const couponBasic = await Coupon.findOne({
+            code: couponCode.toUpperCase()
+        }).lean();
+
+        if (!couponBasic) {
+            throw new AppError("Invalid coupon code", 404);
+        }
+
+        if (!couponBasic.is_active) {
+            throw new AppError("This coupon is no longer active", 400);
+        }
+
+        if (couponBasic.exp_date < now) {
+            throw new AppError("This coupon has expired", 400);
+        }
+
+        if (orderAmount < (couponBasic.min_order_limit ?? 0)) {
+            throw new AppError(
+                `Minimum order amount of ₹${couponBasic.min_order_limit ?? 0} required`,
+                400
+            );
+        }
+        return couponBasic;
+    }
+
+    /**
+     * Main coupon verification function
+     * Flow:
+     * 1. Pre-verification: Basic checks (code, active, expired, min amount)
+     * 2. User usage check: Via aggregation with user's order history
+     * 3. Global usage check: Count total coupon usage across all users
+     * 4. Scope validation: Global vs Vendor-specific logic
+     * Assuming the order amount is coming correct from frontend either it won't work
+    **/
+    verifyCoupon = async (couponCode: string, userId: string, orderAmount: number) => {
+
+        const preCoupon: any = await this.preVerifyCouponCheck(couponCode, orderAmount); //Pre check 
         const now = new Date();
 
-        // ========================================
-        // -: Coupon Validation + User Usage Count
         const result = await Coupon.aggregate([
-            // ============================================================
-            // 1: $match - Find the valid coupon : Output will be array of valid coupon document or [] if nothing match
+            // 1: $match - Find the coupon
+            // Output: Array with 1 coupon document or [] if somehow invalid
             {
                 $match: {
                     code: couponCode.toUpperCase(),
-                    vendorId: new mongoose.Types.ObjectId(vendorId),
                     is_active: true,
                     exp_date: { $gt: now },
                     min_order_limit: { $lte: orderAmount }
                 }
             },
-            // ============================================================
-            // 2: $lookup - Like Join with Orders collection 
-            // userOrderHistory: [{ total: 2 }]      // NEW FIELD from $lookup, User has used this coupon 2 times
+
+            // 2: $lookup - Join with Orders collection
+            //  - If user used coupon 2 times: [{ total: 2 }] - If never used: []
             {
                 $lookup: {
                     from: "orders",
                     let: {
-                        couponCode: "$code",
-                        vid: "$vendorId"
+                        couponCode: "$code"  // Pass coupon code to sub-pipeline
                     },
-                    pipeline: [ //Pipeline for orders module
+                    pipeline: [
                         {
                             $match: {
                                 $expr: {
                                     $and: [
                                         { $eq: ["$userId", new mongoose.Types.ObjectId(userId)] },
-                                        { $eq: ["$couponCode", "$$couponCode"] },
-                                        { $not: { $in: ["$orderStatus", ["cancelled", "delivered"]] } }
+                                        { $eq: ["$coupon_code", "$$couponCode"] },
+                                        { $not: [{ $in: ["$order_status", ["cancelled"]] }] }
                                     ]
                                 }
                             }
                         },
-                        // Count matching orders
                         { $count: "total" }
                     ],
                     as: "userOrderHistory"
                 }
             },
-            // ============================================================
-            // 3: $addFields - Extract count into clean field 
-            // Normalize the output of userOrderHistory --> {userUsageCount : 2}
+
+            // ------------------------------------------------------------
+            // Stage 3: $addFields - Normalize usage count | userOrderHistory: [{ total: 2 }] → userUsageCount: 2 | userOrderHistory: [] → userUsageCount: 0
             {
                 $addFields: {
                     userUsageCount: {
@@ -122,10 +180,8 @@ class CouponService {
                     }
                 }
             },
-            // ============================================================
-            // 4: $match - Validate user hasn't exceeded limit
-            // Compare with user_usage_limit with userUsageCount: If less than then pass
-            // if more pass an empty array : []
+
+            // 4: $match - Filter by user usage limit
             {
                 $match: {
                     $expr: {
@@ -134,46 +190,83 @@ class CouponService {
                 }
             },
 
-            // ============================================================
-            // 5: $project the output
+            // 5: project the output
             {
                 $project: {
                     _id: 1,
                     code: 1,
                     type: 1,
                     value: 1,
+                    scope: 1,
                     usage_limit: 1,
                     user_usage_limit: 1,
-                    userUsageCount: 1, // Amount of time user used it
-                    vendorId: 1
+                    userUsageCount: 1,
+                    vendorId: 1,
+                    min_order_limit: 1
                 }
             }
         ]);
 
-        // Check if coupon validation passed
+
         if (!result.length) {
-            console.warn("\n Invalid coupon code or user limit exceed ==> ", result);
-            throw new Error("Invalid coupon or user usage limit exceeded");
+            throw new AppError(
+                `You have already used this coupon ${preCoupon.user_usage_limit} time(s). Usage limit reached.`,
+                400
+            );
         }
+
+        const coupon = result[0];
 
         // -: Check Global Usage Limit : This means the coupon has been used 45 times total (by all users)
         const global_usage = await Order.countDocuments({
             coupon_code: couponCode.toUpperCase(),
-            ["items.vendorId"]: new mongoose.Types.ObjectId(vendorId),
             order_status: { $nin: ['cancelled'] }
         });
 
-        if (global_usage >= result[0].usage_limit) {
+        if (global_usage >= coupon.usage_limit) {
             console.warn("\n Invalid coupon code or user limit exceed ==> ", result);
             throw new Error("Coupon usage limit exceeded globally");
         };
 
-        return {
-            coupon: result[0],
-            global_usage: global_usage,
-            remain_usage: result[0].usage_limit - global_usage,
-            user_remaining_uses: result[0].user_usage_limit - result[0].userUsageCount
-        };
+
+        // -: Validate on Scope :
+        if (coupon.scope === "global") {
+            return {
+                valid: true,
+                coupon: {
+                    code: coupon.code,
+                    type: coupon.type,
+                    value: coupon.value,
+                    scope: 'global'
+                },
+                discount_price: discount_price(coupon.scope, orderAmount, coupon.value),
+                total_amount: orderAmount,
+                message: "Coupon is applied to your entire order"
+            };
+
+        } else {
+            const isAllVendor = await this.isSameVendorItem(userId, coupon.vendorId);
+
+            if (!isAllVendor) {
+                console.warn("\n Coupon scope is vendor only, All item of user cart must be of this vendor id ==>  ", coupon.vendorId)
+                throw new AppError(`All item of user cart must be this vendor ${coupon.vendorId}`, 400)
+            }
+
+            return {
+                valid: true,
+                coupon: {
+                    code: coupon.code,
+                    type: coupon.type,
+                    value: coupon.value,
+                    scope: 'vendor',
+                    vendorId: coupon.vendorId
+                },
+                discount_price: discount_price(coupon.scope, orderAmount, coupon.value),
+                total_amount: orderAmount,
+                vendorId: coupon.vendorId,
+                message: `Coupon will be applied to vendor products with vendor id ${coupon.vendorId}`
+            };
+        }
     };
 }
 

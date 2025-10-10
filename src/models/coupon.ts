@@ -21,6 +21,14 @@ const couponSchema = new mongoose.Schema({
         min: 0,
         required: [true, "Discount value is required"]
     },
+    scope: {
+        type: String,
+        enum: {
+            values: ["vendor", "global"],
+            message: '${VALUE} is not a valid scope'
+        },
+        required: [true, "Usage Scope is required"]
+    },
     min_order_limit: {
         type: Number,
         min: 0
@@ -37,6 +45,9 @@ const couponSchema = new mongoose.Schema({
     vendorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Vendor",
+        required: function (this: any) {
+            return this.scope === 'vendor';
+        }
     },
     is_active: {
         type: Boolean,

@@ -25,6 +25,7 @@ import { readerRouter } from "./routes/reader-route.js"
 import { clrContactLensRouter } from "./routes/color-contact-lens-route.js"
 import { userRouter } from "./routes/user-routes.js"
 import { couponRouter } from "./routes/coupon-routes.js"
+import { lensSolutionRouter } from "./routes/lens-solution-route.js"
 
 //Configurations
 const app = express()
@@ -58,10 +59,11 @@ app.use("/api/v1/order", orderRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/sunglass", sunglassRouter);
 app.use("/api/v1/reader", readerRouter);
-app.use("/api/v1/color-contact-lens", clrContactLensRouter);
 app.use("/api/v1/contact-lens", contactLensRouter);
 app.use("/api/v1/accessories", accessoriesRouter);
 app.use("/api/v1/lens-package", lensPackageRouter);
+app.use("/api/v1/lens-solution", lensSolutionRouter);
+app.use("/api/v1/color-contact-lens", clrContactLensRouter);
 app.use("/api/v1/sun-lens-package", sunglassLensPackageRouter);
 
 //Analytics

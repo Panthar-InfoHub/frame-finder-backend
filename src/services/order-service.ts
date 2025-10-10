@@ -4,12 +4,13 @@ import { wishlistService } from "./wishlist-service.js";
 import { Order } from "../models/orders.js";
 import { userService } from "./user-services.js";
 import { create_order_items } from "../lib/helper.js";
+import { couponService } from "./coupon-services.js";
 
 
 class OrderClass {
     async createOrder(userId: string, orderData: any) {
 
-        const { tax, shipping_address, shipping_cost, discount, coupon_code } = orderData
+        const { tax, shipping_address, coupon_code } = orderData
         const session = await mongoose.startSession();
 
         try {
@@ -19,7 +20,7 @@ class OrderClass {
 
                 //User and wishlist check : 
                 // No user -> throw error of User not found 
-                // No wishlist items --> Can't create empty order : Error of cart is empty 
+                // No wishlist items --> Can't create empty order : Error of cart is empty
                 const user = await userService.getUserById(userId);
                 if (!user) {
                     console.error("No user found for this user id ==> ", userId)
@@ -41,9 +42,15 @@ class OrderClass {
                 }, 0);
 
                 // Verify coupon code and calculate discount
+                let total_amount = subTotal;
+                let discount = 0;
+                if (coupon_code) {
+                    const verify_coupon = await couponService.verifyCoupon(coupon_code, userId, subTotal);
+                    discount = verify_coupon.discount_price;
+                }
 
-                const totalAmount = (subTotal + tax + shipping_cost) - discount;
-                console.debug(`Total amount ==> ${totalAmount}`)
+                total_amount = (subTotal - discount);
+                console.debug(`Total amount ==> ${total_amount}`)
 
                 const order = new Order({
                     userId,
@@ -54,11 +61,11 @@ class OrderClass {
                     },
                     items: orderItems,
                     shipping_address,
-                    total_amount: totalAmount,
-                    tax,
-                    coupon_code:
-                        shipping_cost,
-                    discount
+                    total_amount,
+                    coupon_code: coupon_code || "",
+                    // tax,
+                    // shipping_cost,
+                    // discount
                 })
 
                 await order.save({ session })
