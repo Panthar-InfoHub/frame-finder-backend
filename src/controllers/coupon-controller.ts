@@ -10,7 +10,7 @@ export class CouponController {
             const vendorId = req.user?.id!;
             data.vendorId = vendorId;
 
-            const coupon = couponService.createCoupon(data);
+            const coupon = await couponService.createCoupon(data);
             console.debug("\n Coupon created successfully: ", coupon);
 
             return res.status(201).send({
@@ -129,18 +129,23 @@ export class CouponController {
 
     verifyCoupon = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { couponCode, vendorId, orderAmount } = req.body;
+            const { couponCode, orderAmount } = req.body;
             console.debug("\n Requested body ==> ", req.body);
 
             const userId = req.user?.id!;
 
-            const verify_coupon = await couponService.verifyCoupon(couponCode, vendorId, userId, orderAmount);
+            const verify_coupon = await couponService.verifyCoupon(couponCode, userId, orderAmount);
             console.debug("\n Verify coupon ==> ", verify_coupon);
 
             return res.status(200).send({
                 success: true,
-                message: "Coupon verified successfully",
-                data: verify_coupon
+                message: verify_coupon.message,
+                data: {
+                    valid: verify_coupon.valid,
+                    coupon: verify_coupon.coupon,
+                    discount_price: verify_coupon.discount_price,
+                    total_amount: verify_coupon.total_amount,
+                }
             });
 
         } catch (error) {

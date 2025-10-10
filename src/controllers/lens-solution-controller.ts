@@ -4,37 +4,37 @@ import { ProductService } from "../services/product-service.js";
 import { Model } from "mongoose";
 
 
-class LensSolutionController {
-    productService: any;
+export class LensSolutionController {
+    lensSolutionService: any;
     constructor(model: Model<any>, modelName: string) {
-        this.productService = new ProductService(model, modelName);
+        this.lensSolutionService = new ProductService(model, modelName);
     }
 
-    createProduct = async (req: Request, res: Response, next: NextFunction) => {
+    createLensSolution = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const productData = req.body;
+            const lensSolutionData = req.body;
 
-            if (!productData || Object.keys(productData).length === 0) {
+            if (!lensSolutionData || Object.keys(lensSolutionData).length === 0) {
                 console.warn("No Lens Solution data provided");
                 throw new AppError("Lens Solution data is required", 400);
             }
 
             if (!["SUPER_ADMIN", "ADMIN"].includes(req?.user?.role || "")) {
                 if (req.user && req.user.id) {
-                    productData.vendorId = req.user.id;
+                    lensSolutionData.vendorId = req.user.id;
                 }
             }
 
-            console.debug("\nLens Solution data received for creation ==> ", productData);
+            console.debug("\nLens Solution data received for creation ==> ", lensSolutionData);
 
-            const product = await this.productService.create(productData);
+            const lensSolution = await this.lensSolutionService.create(lensSolutionData);
 
-            console.debug("\nLens Solution created successfully: ", product);
+            console.debug("\nLens Solution created successfully: ", lensSolution);
 
             res.status(201).send({
                 success: true,
                 message: 'Lens Solution created successfully',
-                data: product
+                data: lensSolution
             });
             return;
         } catch (error) {
@@ -45,14 +45,14 @@ class LensSolutionController {
     }
 
     //Update Lens Solution except stock
-    updateProduct = async (req: Request, res: Response, next: NextFunction) => {
+    updateLensSolution = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const productId = req.params.id;
+            const lensSolutionId = req.params.id;
             const updateData = req.body;
 
-            console.debug(`Updating Lens Solution with ID: ${productId}`);
+            console.debug(`Updating Lens Solution with ID: ${lensSolutionId}`);
             console.debug("\n Updating data => ", updateData)
-            if (!productId) {
+            if (!lensSolutionId) {
                 console.warn("No Lens Solution ID provided");
                 throw new AppError("Lens Solution ID is required", 400);
             }
@@ -67,13 +67,13 @@ class LensSolutionController {
 
             console.debug("\n Updated data => ", updateData)
 
-            const product = await this.productService.update(productId, updateData);
+            const lensSolution = await this.lensSolutionService.update(lensSolutionId, updateData);
 
-            console.debug("Updated Lens Solution ==> ", product);
+            console.debug("Updated Lens Solution ==> ", lensSolution);
             res.status(200).send({
                 success: true,
                 message: "Lens Solution updated successfully",
-                data: product
+                data: lensSolution
             });
             return;
 
@@ -88,13 +88,13 @@ class LensSolutionController {
     updateVariantStock = async (req: Request, res: Response, next: NextFunction) => {
         try {
 
-            const productId = req.params.id;
+            const lensSolutionId = req.params.id;
             const { operation, quantity, variantId } = req.body;
 
-            console.debug(`Updating stock for Lens Solution with ID: ${productId}`);
+            console.debug(`Updating stock for Lens Solution with ID: ${lensSolutionId}`);
             console.debug("\nOperation: ", operation, " Quantity: ", quantity);
-            if (!productId) {
-                console.warn("No vairant ID provided");
+            if (!lensSolutionId) {
+                console.warn("No variant ID provided");
                 throw new AppError("Variant ID is required", 400)
             }
 
@@ -103,13 +103,13 @@ class LensSolutionController {
                 throw new AppError("Operation, variant id and quantity are required", 400)
             }
 
-            const product = await this.productService.updateStock(productId, variantId, operation, quantity);
+            const lensSolution = await this.lensSolutionService.updateStock(lensSolutionId, variantId, operation, quantity);
 
-            console.debug("Updated Lens Solution stock successfully ==> ", product);
+            console.debug("Updated Lens Solution stock successfully ==> ", lensSolution);
             res.status(200).send({
                 success: true,
                 message: "Lens Solution stock updated successfully",
-                data: product
+                data: lensSolution
             });
             return;
 
@@ -121,7 +121,7 @@ class LensSolutionController {
     }
 
     //get all Lens Solutions
-    getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
+    getAllLensSolutions = async (req: Request, res: Response, next: NextFunction) => {
         try {
 
             const page = parseInt(req.params.page as string) || 1;
@@ -153,7 +153,7 @@ class LensSolutionController {
 
             console.debug("Filter for Lens Solutions: ", filter);
 
-            const result = await this.productService.getAll({ filter, skip, limit });
+            const result = await this.lensSolutionService.getAll({ filter, skip, limit });
             console.debug("\nResult: ", result);
 
             res.status(200).send({
@@ -171,22 +171,22 @@ class LensSolutionController {
     }
 
     //get Lens Solution by id
-    getProductById = async (req: Request, res: Response, next: NextFunction) => {
+    getLensSolutionById = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const productId = req.params.id;
+            const lensSolutionId = req.params.id;
 
-            if (!productId) {
+            if (!lensSolutionId) {
                 console.warn("No Lens Solution ID provided");
                 throw new AppError("Lens Solution ID is required", 400);
             }
 
-            const product = await this.productService.getById(productId);
+            const lensSolution = await this.lensSolutionService.getById(lensSolutionId);
 
-            console.debug("Fetched Lens Solution: ", product);
+            console.debug("Fetched Lens Solution: ", lensSolution);
             res.status(200).send({
                 success: true,
                 message: "Lens Solution fetched successfully",
-                data: product
+                data: lensSolution
             });
             return;
 
@@ -198,7 +198,7 @@ class LensSolutionController {
     }
 
     //delete Lens Solution
-    deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
+    deleteLensSolution = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const id = req.params.id
 
@@ -209,16 +209,16 @@ class LensSolutionController {
                 throw new AppError("Lens Solution ID is required", 400);
             }
 
-            const product: any = await this.productService.delete(id);
+            const lensSolution: any = await this.lensSolutionService.delete(id);
 
-            console.debug("Deleted Lens Solution ==> ", product);
+            console.debug("Deleted Lens Solution ==> ", lensSolution);
             res.status(200).send({
                 success: true,
                 message: "Lens Solution deleted successfully",
                 data: {
-                    brand_name: product.brand_name,
-                    productCode: product.productCode,
-                    id: product._id
+                    brand_name: lensSolution.brand_name,
+                    productCode: lensSolution.productCode,
+                    id: lensSolution._id
                 }
             });
             return;

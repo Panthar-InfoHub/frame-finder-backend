@@ -28,7 +28,7 @@ export const create_order_items = (wishListItems: any): OrderItem[] => {
         variantId: item.variant._id,
         vendorId: item.product.vendorId._id,
         productName: item.product.brand_name,
-        price: item.variant.price.base_price,
+        price: item.variant.price.total_price,
         quantity: item.quantity,
         prescription: item.prescription,
         lens_package_detail: item.lens_package_detail,
@@ -47,4 +47,12 @@ export const create_order_items = (wishListItems: any): OrderItem[] => {
             business_owner: item.product.vendorId.business_owner,
         },
     }))
+}
+
+export const discount_price = (type: string, total_amount: number, coupon_value: number): number => {
+    console.debug(`Type ==> ${type} | Total Amount ==> ${total_amount} | Coupon value ==> ${coupon_value}`)
+    if (type === "percentage") {
+        return (total_amount * coupon_value) / 100
+    }
+    return Math.min(total_amount, coupon_value);
 }

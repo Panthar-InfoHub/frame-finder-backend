@@ -106,7 +106,7 @@ export const deleteVendor = async (req: Request, res: Response, next: NextFuncti
         const vendorId = req.params.id;
         console.debug(`Deleting vendor with ID: ${vendorId}`);
 
-        const vendor = await Vendor.findByIdAndUpdate(vendorId, { isActive: false }, { new: true });
+        const vendor = await Vendor.findByIdAndUpdate(vendorId, { $set: { isActive: false } }, { new: true });
 
         if (!vendor) {
             console.warn(`Vendor with ID ${vendorId} not found`);
@@ -137,7 +137,7 @@ export const updateVendor = async (req: Request, res: Response, next: NextFuncti
         const vendorId = req.params.id;
         console.debug(`Updating vendor with ID: ${vendorId}`);
 
-        const vendor = await Vendor.findByIdAndUpdate(vendorId, req.body, { new: true });
+        const vendor = await Vendor.findByIdAndUpdate(vendorId, { $set: req.body }, { new: true });
 
         if (!vendor) {
             console.warn(`Vendor with ID ${vendorId} not found`);

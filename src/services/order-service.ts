@@ -3,13 +3,15 @@ import AppError from "../middlwares/Error.js";
 import { wishlistService } from "./wishlist-service.js";
 import { Order } from "../models/orders.js";
 import { userService } from "./user-services.js";
-import { create_order_items } from "../lib/helper.js";
+import { create_order_items, discount_price } from "../lib/helper.js";
+import { couponService } from "./coupon-services.js";
+import { OrderItem } from "../lib/types.js";
 
 
 class OrderClass {
     async createOrder(userId: string, orderData: any) {
 
-        const { tax, shipping_address, shipping_cost, discount, coupon_code } = orderData
+        const { tax, shipping_address, coupon_code } = orderData
         const session = await mongoose.startSession();
 
         try {
@@ -19,7 +21,7 @@ class OrderClass {
 
                 //User and wishlist check : 
                 // No user -> throw error of User not found 
-                // No wishlist items --> Can't create empty order : Error of cart is empty 
+                // No wishlist items --> Can't create empty order : Error of cart is empty
                 const user = await userService.getUserById(userId);
                 if (!user) {
                     console.error("No user found for this user id ==> ", userId)
@@ -35,38 +37,85 @@ class OrderClass {
                 const orderItems = create_order_items(wishListItems);
                 console.debug(`\n Order items mapped properly for creation ==> ${JSON.stringify(orderItems, null, 2)}`)
 
-                //Calculating cost : subtotal and total amount --> Create order
-                const subTotal = orderItems.reduce((sum, item) => {
-                    return sum + (item.price * item.quantity)
+                //Grouping items by vendor Id 
+                const item_by_vendor: { [vendorId: string]: any[] } = {};
+                for (const item of orderItems) {
+                    const vendorId = item.vendorId.toString();
+
+                    if (!item_by_vendor[vendorId]) {
+                        item_by_vendor[vendorId] = [];
+                    }
+
+                    item_by_vendor[vendorId].push(item);
+                }
+
+                //Calculate Overall Cart total for proprotional break down of discount
+                const order_total = orderItems.reduce((sum, item) => {
+                    return sum + (item.price * item.quantity) + item?.lens_package_detail?.package_price
                 }, 0);
 
-                // Verify coupon code and calculate discount
+                let coupon = null;
+                if (coupon_code) {
+                    coupon = await couponService.verifyCoupon(coupon_code, userId, order_total);
+                };
 
-                const totalAmount = (subTotal + tax + shipping_cost) - discount;
-                console.debug(`Total amount ==> ${totalAmount}`)
 
-                const order = new Order({
-                    userId,
-                    user_snapshot: {
-                        email: user.email || "test_mail",
-                        name: `${user.first_name} - ${user.last_name}` || "test_name",
-                        phone: user.phone || "1200"
-                    },
-                    items: orderItems,
-                    shipping_address,
-                    total_amount: totalAmount,
-                    tax,
-                    coupon_code:
-                        shipping_cost,
-                    discount
-                })
 
-                await order.save({ session })
-                await wishlistService.clearWishlist(userId);
-                console.debug(`Order created successfully ==> ${order}`);
-                console.debug(`\n Wishlist cleared of user after order creation...`)
+                //Create order per vendor wise
+                let orders: mongoose.Types.ObjectId[] = [];
+                for (const [vendorId, items] of Object.entries(item_by_vendor)) {
 
-                return order;
+                    const sub_total: number = items.reduce((sum, item: OrderItem) => {
+                        return sum + (item.price * item.quantity) + item?.lens_package_detail?.package_price
+                    }, 0)
+                    console.debug(`\n Subtotal for vendor ${vendorId} Total amount ==> ${sub_total}`);
+
+                    let discount: number = 0;
+                    if (coupon) {
+                        if (coupon.coupon.scope === "global") {
+                            // proprotional break down of total amount for fair discount.
+                            discount = (sub_total / order_total) * coupon.discount_price;
+                        } else {
+                            if (coupon.vendorId === vendorId) {
+                                // Calculate discount for THIS vendor only : whole sole coz not vendor
+                                discount = discount_price(
+                                    coupon.coupon.type,
+                                    sub_total,
+                                    coupon.coupon.value
+                                );
+
+                                console.log(`Vendor coupon applied: ${discount}`);
+                            }
+                        }
+                    }
+
+                    //Now we have discount, we can calculate tax and total amount.
+                    //After that create order per vendor wise.
+                    // const tax = Math.round((subtotal - discount) * 0.18); // 18% GST
+                    const total_amount = sub_total - discount;
+
+                    const order = new Order({
+                        userId,
+                        user_snapshot: {
+                            email: user.email || "test_mail",
+                            name: `${user.first_name} - ${user.last_name}` || "test_name",
+                            phone: user.phone || "1200"
+                        },
+                        items,
+                        shipping_address,
+                        total_amount,
+                        coupon_code: coupon_code || "",
+                        discount: discount
+                    })
+
+                    await order.save({ session })
+                    await wishlistService.clearWishlist(userId);
+                    console.debug(`Order created successfully ==> ${order}`);
+                    console.debug(`\n Wishlist cleared of user after order creation...`)
+                    orders.push(order._id);
+                }
+
+                return { orders };
             })
             return result;
 
