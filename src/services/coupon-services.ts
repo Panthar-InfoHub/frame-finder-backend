@@ -239,18 +239,12 @@ class CouponService {
                     value: coupon.value,
                     scope: 'global'
                 },
-                discount_price: discount_price(coupon.scope, orderAmount, coupon.value),
+                discount_price: discount_price(coupon.type, orderAmount, coupon.value),
                 total_amount: orderAmount,
                 message: "Coupon is applied to your entire order"
             };
 
         } else {
-            const isAllVendor = await this.isSameVendorItem(userId, coupon.vendorId);
-
-            if (!isAllVendor) {
-                console.warn("\n Coupon scope is vendor only, All item of user cart must be of this vendor id ==>  ", coupon.vendorId)
-                throw new AppError(`All item of user cart must be this vendor ${coupon.vendorId}`, 400)
-            }
 
             return {
                 valid: true,
@@ -261,7 +255,7 @@ class CouponService {
                     scope: 'vendor',
                     vendorId: coupon.vendorId
                 },
-                discount_price: discount_price(coupon.scope, orderAmount, coupon.value),
+                discount_price: 0,
                 total_amount: orderAmount,
                 vendorId: coupon.vendorId,
                 message: `Coupon will be applied to vendor products with vendor id ${coupon.vendorId}`

@@ -50,6 +50,7 @@ export const create_order_items = (wishListItems: any): OrderItem[] => {
 }
 
 export const discount_price = (type: string, total_amount: number, coupon_value: number): number => {
+    console.debug(`Type ==> ${type} | Total Amount ==> ${total_amount} | Coupon value ==> ${coupon_value}`)
     if (type === "percentage") {
         return (total_amount * coupon_value) / 100
     }
