@@ -6,6 +6,8 @@ import { ContactLens } from "../models/contact-lens.js";
 import { Order } from "../models/orders.js";
 import { getStartDate, months } from "../lib/uitils.js";
 import mongoose from "mongoose";
+import { ColorContactLens } from "../models/color-contact-lens.js";
+import { Reader } from "../models/reader.js";
 
 export const getVendorProductCounts = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -13,25 +15,32 @@ export const getVendorProductCounts = async (req: Request, res: Response, next: 
         const vendorId = req.user?.id;
         console.debug(`${vendorId} ==> is requesting count analytics`);
 
-        const [productsCount, sunglassCount, accessoriesCount, contactLensCount] = await Promise.all([
+        const [productsCount, sunglassCount, accessoriesCount, contactLensCount, clrContactLensCount, readerCount] = await Promise.all([
             Product.countDocuments({ vendorId }),
             Sunglass.countDocuments({ vendorId }),
             Accessories.countDocuments({ vendorId }),
-            ContactLens.countDocuments({ vendorId })
+            ContactLens.countDocuments({ vendorId }),
+            ColorContactLens.countDocuments({ vendorId }),
+            Reader.countDocuments({ vendorId }),
         ])
 
         console.debug(
-            `Product Counts =>\nFrames: ${productsCount}\nSunglasses: ${sunglassCount}\nAccessories: ${accessoriesCount}\nContact Lens: ${contactLensCount}`
+            `Product Counts =>\nFrames: ${productsCount}\nSunglasses: ${sunglassCount}\nAccessories: ${accessoriesCount}\nContact Lens: ${contactLensCount}
+            \n Clr Contact Lens: ${clrContactLensCount}
+            \nReader Lens: ${readerCount},
+            `
         )
 
         res.status(200).send({
             success: true,
             message: "Products counts fetched successfully",
             data: {
-                frames: productsCount,
-                sunglasses: sunglassCount,
-                accessories: accessoriesCount,
-                contactLens: contactLensCount
+                Frame: productsCount,
+                Sunglasses: sunglassCount,
+                Accessories: accessoriesCount,
+                "Contact Lens": contactLensCount,
+                "Color Contact Lens": clrContactLensCount,
+                Reader: readerCount
             }
         })
         return;
@@ -148,7 +157,7 @@ export async function getVendorMonthlyAnalytics(req: Request, res: Response, nex
                 // Add a zero-value entry for this month
                 finalData.push({
                     year,
-                    month: month ,
+                    month: month,
                     totalSales: 0,
                     customerCount: 0
                 });
@@ -167,5 +176,78 @@ export async function getVendorMonthlyAnalytics(req: Request, res: Response, nex
         console.error("Error while getting all product count of vendor ==> ", error);
         next(error);
         return
+    }
+}
+
+export async function getVendorMetrics(req: Request, res: Response, next: NextFunction) {
+    const vendorId = req.user?.id!;
+    console.debug(`\n Calculating vendor metrics for vendor ==> ${vendorId}`)
+    try {
+        const stats = await Order.aggregate([
+            { $unwind: "$items" },
+            {
+                $match: { "items.vendorId": new mongoose.Types.ObjectId(vendorId) }
+            },
+            {
+                $group: {
+                    _id: null,  // Group all into single result
+                    totalSales: { $sum: "$total_amount" },
+                    // Total number of orders
+                    totalOrders: { $sum: 1 },
+                    // Pending orders count
+                    pendingOrders: {
+                        $sum: {
+                            $cond: [
+                                { $eq: ["$order_status", "pending"] },
+                                1,
+                                0
+                            ]
+                        }
+                    },
+                    totalItemsSold: {
+                        $sum: "$items.quantity"
+                    }
+                }
+            },
+
+            {
+                $project: {
+                    _id: 0,
+                    totalSales: { $round: ["$totalSales", 2] },
+                    totalOrders: 1,
+                    pendingOrders: 1,
+                    totalItemsSold: 1
+                }
+            }
+        ]);
+
+        console.debug("\n Final result of metrics analytics ==> ", stats[0])
+
+        if (!stats.length) {
+            return {
+                totalSales: 0,
+                totalOrders: 0,
+                pendingOrders: 0,
+                totalItemsSold: 0
+            };
+        }
+
+        const metric = stats[0];
+        {
+
+        }
+
+        return res.status(200).send({
+            success: true,
+            message: "Metrics fetched successfully",
+            data: {
+                total_sales: metric.totalSales,
+                total_orders: metric.totalOrders,
+                total_items_sold: metric.totalItemsSold,
+                pending_orders: metric.pendingOrders,
+            }
+        })
+    } catch (error) {
+
     }
 }
