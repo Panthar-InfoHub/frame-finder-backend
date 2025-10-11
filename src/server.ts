@@ -26,6 +26,8 @@ import { clrContactLensRouter } from "./routes/color-contact-lens-route.js"
 import { userRouter } from "./routes/user-routes.js"
 import { couponRouter } from "./routes/coupon-routes.js"
 import { lensSolutionRouter } from "./routes/lens-solution-route.js"
+import { bestSellerRouter } from "./routes/best-seller-routes.js"
+import { startCronBestSellerJob } from "./jobs/jobs.js"
 
 //Configurations
 const app = express()
@@ -68,6 +70,7 @@ app.use("/api/v1/sun-lens-package", sunglassLensPackageRouter);
 
 //Analytics
 app.use("/api/v1/vendor-analytics", vendorAnalyticRouter);
+app.use("/api/v1/best-seller", bestSellerRouter);
 
 
 
@@ -90,5 +93,6 @@ const PORT = process.env.PORT || 8080
 connectDB()
 // this is only to test the pull request
 app.listen(PORT, () => {
+    startCronBestSellerJob();
     console.log(`\nBackend server is started... \n PORT ==> ${PORT}`)
 })

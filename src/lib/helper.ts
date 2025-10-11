@@ -56,3 +56,49 @@ export const discount_price = (type: string, total_amount: number, coupon_value:
     }
     return Math.min(total_amount, coupon_value);
 }
+
+export function getDateRange(periodName: string): { start: Date | null; end: Date } {
+    const now = new Date();
+    const end = now;
+    let start: Date | null = null;
+
+    switch (periodName) {
+        case 'last_7_days':
+            start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+
+        case 'last_15_days':
+            start = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
+            break;
+
+        case 'last_30_days':
+            start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            break;
+
+        case 'last_60_days':
+            start = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+            break;
+
+        case 'last_90_days':
+            start = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            break;
+
+        case 'last_month':
+            const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+            return { start: firstDayOfLastMonth, end: lastDayOfLastMonth };
+
+        case 'current_month':
+            start = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+
+        case 'all_time':
+            start = null;
+            break;
+
+        default:
+            throw new Error(`Unknown period: ${periodName}`);
+    }
+
+    return { start, end };
+}
