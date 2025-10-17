@@ -52,6 +52,11 @@ export const baseProductSchema = new mongoose.Schema({
         min: 0,
         max: 5,
     },
+    total_reviews: {
+        type: Number,
+        default: 0,
+        min: 0,
+    },
 
     status: {
         type: String,
@@ -104,13 +109,5 @@ productSchema.index({
     brand_name: 'text',
     vendorId: 1
 })
-
-// Generate product ID before saving
-// productSchema.pre('validate', async function (next) {
-//     if (this.isNew && !this.productCode) {
-//         this.productCode = generateReadableProductCode("FRA");
-//     }
-//     next();
-// });
 
 export const Product = mongoose.model("Product", productSchema);
