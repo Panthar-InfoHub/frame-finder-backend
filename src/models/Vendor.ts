@@ -9,6 +9,7 @@ interface IVendor extends Document {
     dob?: Date;
     company_pan ?: string;
     year_of_experience?: number;
+    total_reviews ?: number;
     address?: {
         address_line_1?: string;
         city?: string;
@@ -114,6 +115,11 @@ const vendorSchema = new mongoose.Schema<IVendor, vendorSchemaType>({
         min: 0,
         max: 5,
         default: 0
+    },
+    total_reviews: {
+        type: Number,
+        default: 0,
+        min: 0,
     },
     isActive: {
         type: Boolean,

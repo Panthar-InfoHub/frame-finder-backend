@@ -28,6 +28,7 @@ import { couponRouter } from "./routes/coupon-routes.js"
 import { lensSolutionRouter } from "./routes/lens-solution-route.js"
 import { bestSellerRouter } from "./routes/best-seller-routes.js"
 import { startCronBestSellerJob } from "./jobs/jobs.js"
+import { reviewRouter } from "./routes/review-routes.js"
 
 //Configurations
 const app = express()
@@ -56,6 +57,7 @@ app.use("/api/v1/vendor-misc", vendorMiscRouter);
 //Order Routes
 app.use("/api/v1/coupon", couponRouter);
 app.use("/api/v1/order", orderRouter);
+app.use("/api/v1/review", reviewRouter);
 
 //Products Api Routes
 app.use("/api/v1/products", productRouter);
