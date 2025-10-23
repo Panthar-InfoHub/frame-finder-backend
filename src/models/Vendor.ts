@@ -7,9 +7,9 @@ interface IVendor extends Document {
     business_owner?: string;
     firm_name?: string;
     dob?: Date;
-    company_pan ?: string;
+    company_pan?: string;
     year_of_experience?: number;
-    total_reviews ?: number;
+    total_reviews?: number;
     address?: {
         address_line_1?: string;
         city?: string;
@@ -35,6 +35,20 @@ interface IVendor extends Document {
         account_number?: string;
         ifsc_code?: string;
     }
+    premium_member?: boolean;
+    meta?: {
+        email_notifications?: {
+            new_order?: boolean;
+            return?: boolean;
+            payout?: boolean;
+        };
+        other_notifications?: {
+            sms_notification?: boolean;
+            app_notification?: boolean;
+        };
+        language?: string;
+        curreny?: string;
+    };
     categories?: [string];
 }
 
@@ -141,8 +155,26 @@ const vendorSchema = new mongoose.Schema<IVendor, vendorSchemaType>({
         account_holder_name: { type: String, trim: true },
         account_number: { type: String, trim: true },
         ifsc_code: { type: String, trim: true },
-        personal_aadhar: { type: String, trim: true},
+        bank_name: { type: String, trim: true },
+        personal_aadhar: { type: String, trim: true },
         personal_pan: { type: String, trim: true },
+    },
+    premium_member: {
+        type: Boolean,
+        default: false,
+    },
+    meta: {
+        email_notifications: {
+            new_order: { type: Boolean, default: true },
+            return: { type: Boolean, default: true },
+            payout: { type: Boolean, default: true },
+        },
+        other_notifications: {
+            sms_notification: { type: Boolean, default: false },
+            app_notification: { type: Boolean, default: false },
+        },
+        language: { type: String, default: "en" },
+        curreny: { type: String, default: "INR" },
     },
     categories: [String]
 

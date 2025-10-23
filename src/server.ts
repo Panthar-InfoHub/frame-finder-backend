@@ -29,6 +29,7 @@ import { lensSolutionRouter } from "./routes/lens-solution-route.js"
 import { bestSellerRouter } from "./routes/best-seller-routes.js"
 import { startCronBestSellerJob } from "./jobs/jobs.js"
 import { reviewRouter } from "./routes/review-routes.js"
+import { webhookRouter } from "./routes/webhook-route.js"
 
 //Configurations
 const app = express()
@@ -73,6 +74,9 @@ app.use("/api/v1/sun-lens-package", sunglassLensPackageRouter);
 //Analytics
 app.use("/api/v1/vendor-analytics", vendorAnalyticRouter);
 app.use("/api/v1/best-seller", bestSellerRouter);
+
+//Webhook Routes
+app.use("/api/v1/webhhok", webhookRouter)
 
 
 

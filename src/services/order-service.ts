@@ -6,7 +6,13 @@ import { userService } from "./user-services.js";
 import { create_order_items, discount_price } from "../lib/helper.js";
 import { couponService } from "./coupon-services.js";
 import { OrderItem } from "../lib/types.js";
+import { Payment } from "../models/payment.js";
 
+interface OrderInfo {
+    order_id: mongoose.Types.ObjectId;
+    total_amount: number;
+    discount: number;
+}
 
 class OrderClass {
     async createOrder(userId: string, orderData: any) {
@@ -62,7 +68,7 @@ class OrderClass {
 
 
                 //Create order per vendor wise
-                let orders: mongoose.Types.ObjectId[] = [];
+                let orders: OrderInfo[] = [];
                 for (const [vendorId, items] of Object.entries(item_by_vendor)) {
 
                     const sub_total: number = items.reduce((sum, item: OrderItem) => {
@@ -109,12 +115,11 @@ class OrderClass {
                     })
 
                     await order.save({ session })
-                    await wishlistService.clearWishlist(userId);
                     console.debug(`Order created successfully ==> ${order}`);
-                    console.debug(`\n Wishlist cleared of user after order creation...`)
-                    orders.push(order._id);
+                    orders.push({ order_id: order._id, total_amount, discount });
                 }
 
+                // await wishlistService.clearWishlist(userId);
                 return { orders };
             })
             return result;
@@ -174,10 +179,11 @@ class OrderClass {
 
         const updateFields: any = {};
 
-        if (order_status) updateFields.orderStatus = order_status;
+        if (order_status) updateFields.order_status = order_status;
         if (tracking_id) updateFields.tracking_id = tracking_id;
         if (paymentAttemptId) updateFields.$push = { payment_attempts: paymentAttemptId };
 
+        console.debug('\nUpdate fields for order ==> ', updateFields);
 
         const updatedOrder = await Order.findByIdAndUpdate(
             orderId,
@@ -233,6 +239,62 @@ class OrderClass {
                 pages: Math.ceil(totalCount / Number(limit))
             },
         };
+    }
+
+
+    //Webhook Order Hanlder
+    async webhookOrderHandler(orderIds: string[], userId: string, orderEntity: any, paymentEntity: any, signature: any) {
+        const session = await mongoose.startSession();
+        try {
+            await session.withTransaction(async () => {
+                const orders = await Order.find({
+                    _id: { $in: orderIds },
+                    userId: userId
+                }).session(session);
+
+                if (orders.length !== orderIds.length) {
+                    console.error("\nOrders mismatch : Some orders not found for the user in webhook handler");
+                    throw new AppError("Orders mismatch : Some orders not found for the user", 404);
+                }
+
+                const payment = await Payment.create([{
+                    userId,
+                    orderIds,
+                    amount: orderEntity.amount / 100,
+                    currency: orderEntity.currency,
+                    status: 'successful',
+                    method: paymentEntity.method,
+                    provider: 'razorpay',
+                    providerDetails: {
+                        razorPayOrderId: orderEntity.id,
+                        razorpayPaymentId: paymentEntity.id,
+                        signature
+                    },
+                }], { session })
+
+                console.debug(`\n Payment created  ==> ${JSON.stringify(payment[0], null, 2)}`)
+
+                const updatedOrder = await Order.updateMany(
+                    { _id: { $in: orderIds } },
+                    {
+                        $set: { order_status: 'processing' },
+                        $push: { payment_attempts: payment[0]._id }
+                    }, { session }
+                );
+                console.debug(`\n ${updatedOrder.modifiedCount} Orders updated in webhook `)
+
+                await wishlistService.clearWishlist(userId);
+                console.debug(`\n Wishlist cleared for user ${userId}`);
+                return;
+            })
+            console.debug(`\n Order webhook completed successfully.`);
+
+        } catch (error) {
+            console.error("\n Error in order webhook handler ==> ", error);
+            throw new AppError("Error in order webhook handler", 500);
+        } finally {
+            await session.endSession();
+        }
     }
 }
 

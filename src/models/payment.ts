@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const paymentSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
+    orderIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true }], //Just need to make this array of order IDs
     amount: { type: Number, required: true },
     currency: { type: String, default: 'INR' },
     status: {
