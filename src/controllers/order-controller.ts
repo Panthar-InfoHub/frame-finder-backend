@@ -85,7 +85,7 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
         const statusData = req.body;
 
         console.debug(`Order Id for update ==> ${orderId}`)
-        console.debug(`\nData to updated order ==> ${statusData}`)
+        console.debug('\nData to updated order ==> ', statusData);
 
         const data = await orderService.updateOrderStatus(orderId, statusData);
         console.debug("\nOrder ==>", data);
