@@ -160,8 +160,8 @@ class OrderClass {
     }
 
     //Specific Order by ID
-    async getOrderById(orderId: string, userId: string) {
-        const filter: any = { _id: orderId, userId };
+    async getOrderById(orderId: string, userId?: string) {
+        const filter: any = { _id: orderId, ...(userId && { userId }) };
 
         const order = await Order.findOne(filter)
             .populate('payment_attempts') //Enable later

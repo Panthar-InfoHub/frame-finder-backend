@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { CouponController } from "../controllers/coupon-controller.js";
 import { auth } from "../middlwares/auth.js";
-import { isAdmin, isVendor } from "../middlwares/roleCheck.js";
+import { isVendor } from "../middlwares/roleCheck.js";
 
 export const couponRouter = Router();
 const couponController = new CouponController();
 
 
-couponRouter.get("/search", [auth, isAdmin], couponController.searchCoupon);
+couponRouter.get("/search", [auth], couponController.searchCoupon);
 couponRouter.get("/:id", [auth], couponController.getCouponByID);
 
 couponRouter.post("/", [auth, isVendor], couponController.createCoupon);

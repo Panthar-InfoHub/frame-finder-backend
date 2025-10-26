@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { auth } from "../middlwares/auth.js";
 import { createOrder, getOrderById, getUserOrders, searchOrders, updateOrderStatus } from "../controllers/order-controller.js";
-import { isAdmin } from "../middlwares/roleCheck.js";
+import { auth } from "../middlwares/auth.js";
 
 export const orderRouter = Router();
 

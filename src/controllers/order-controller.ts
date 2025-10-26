@@ -58,7 +58,13 @@ export const getUserOrders = async (req: Request, res: Response, next: NextFunct
 export const getOrderById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const orderId = req.params.id;
-        const userId = req.user?.id!;
+        let userId = "";
+
+        if (!["SUPER_ADMIN", "ADMIN", "VENDOR"].includes(req.user?.role!)) {
+            userId = req.user?.id!
+        }
+
+
 
         const data = await orderService.getOrderById(orderId, userId);
 
@@ -111,9 +117,14 @@ export const searchOrders = async (req: Request, res: Response, next: NextFuncti
             page: parseInt(req.query.page as string) || 1,
             limit: parseInt(req.query.limit as string) || 30
         };
+
+        if (req.user?.role === "VENDOR") {
+            filters['vendorId'] = req.user?.id;
+        } else if (req.user?.role === "USER") {
+            filters['userId'] = req.user?.id;
+        }
+
         console.debug(`Filter for search in order ==> ${JSON.stringify(filters, null, 2)}`)
-
-
         const data = await orderService.searchOrders(filters, pagination);
         console.debug("Order ==>", data);
         res.status(200).send({

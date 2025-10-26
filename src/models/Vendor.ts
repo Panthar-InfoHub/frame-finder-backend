@@ -47,7 +47,7 @@ interface IVendor extends Document {
             app_notification?: boolean;
         };
         language?: string;
-        curreny?: string;
+        currency?: string;
     };
     categories?: [string];
 }
@@ -174,7 +174,7 @@ const vendorSchema = new mongoose.Schema<IVendor, vendorSchemaType>({
             app_notification: { type: Boolean, default: false },
         },
         language: { type: String, default: "en" },
-        curreny: { type: String, default: "INR" },
+        currency: { type: String, default: "INR" },
     },
     categories: [String]
 
