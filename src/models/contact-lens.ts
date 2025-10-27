@@ -146,7 +146,7 @@ contactLensSchema.add({
     type: { type: String, default: "ContactLens" },
     contact_lens_cover: { type: Boolean },
     size: [String],
-    variant: [baseVariantSchema],
+    variants: [baseVariantSchema],
     lens_type: {
         type: String,
         enum: {

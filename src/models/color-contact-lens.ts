@@ -99,7 +99,7 @@ colorContactLensSchema.add({
     type: { type: String, default: "ColorContactLens" },
     contact_lens_cover: { type: Boolean },
     size: [String],
-    variant: [baseVariantSchema],
+    variants: [baseVariantSchema],
     lens_type: {
         type: String,
         enum: {
