@@ -9,7 +9,10 @@ const itemSchema = new mongoose.Schema({
     onModel: {
         type: String,
         required: true,
-        enum: ['Sunglass', 'Product', 'ContactLens', 'ColorContactLens', 'Reader', 'Accessories']
+        enum: {
+            values: ['Sunglass', 'Product', 'ContactLens', 'ColorContactLens', 'Reader', 'Accessories'],
+            message: '{VALUE} is not a valid type'
+        },
     },
 
     variant: {
