@@ -187,7 +187,7 @@ class BestSellerController {
                     .limit(limit)
                     .select(" productId vendorId productType rank total_quantity_sold total_revenue ")
                     .populate('vendorId', 'business_name business_owner')
-                    .populate('productId', 'productCode brand_name')
+                    .populate('productId', 'productCode brand_name rating variants.images variants.price.total_price')
                     .lean(),
 
                 BestSeller.countDocuments(query)

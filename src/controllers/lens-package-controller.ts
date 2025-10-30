@@ -108,18 +108,21 @@ export class LensPackageController {
             const limit = parseInt(req.query.limit as string) || 30
             const productCode = req.query.code as string
             const vendorId = req.query.vendorId as string
+            const prescription_type = req.query.type as string
 
-            console.debug(`Gell all ${this.modelName} params \nPage: ${page}, Limit: ${limit}, Product Code: ${productCode}`);
+            console.debug(`Gell all ${this.modelName} params \nPage: ${page}, Limit: ${limit}, Product Code: ${productCode} ,  Prescription type : ${prescription_type}`);
 
             const skip = (page - 1) * limit;
 
-            // const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ?  : req.user?.id
+            // const vendorId = ["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string) ?  : req.user?.id 
             const query: any = {};
 
             //Assign package code if provided
             if (productCode) {
                 query.productCode = productCode;
             }
+
+            if (prescription_type) query.prescription_type = prescription_type
 
             if (["ADMIN", "SUPER_ADMIN"].includes(req.user?.role as string)) {
                 if (vendorId) {

@@ -255,7 +255,7 @@ class CouponService {
                     scope: 'vendor',
                     vendorId: coupon.vendorId
                 },
-                discount_price: 0,
+                discount_price: discount_price(coupon.type, orderAmount, coupon.value),
                 total_amount: orderAmount,
                 vendorId: coupon.vendorId,
                 message: `Coupon will be applied to vendor products with vendor id ${coupon.vendorId}`

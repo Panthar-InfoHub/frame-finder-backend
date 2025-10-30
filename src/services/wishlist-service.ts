@@ -1,6 +1,5 @@
-import { WishList } from "../models/Wishlist.js";
-import mongoose from "mongoose";
 import AppError from "../middlwares/Error.js";
+import { WishList } from "../models/Wishlist.js";
 
 class WishlistService {
 
