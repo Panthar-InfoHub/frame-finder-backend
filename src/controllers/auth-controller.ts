@@ -12,13 +12,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         const { loginId, password, type } = req.body;
         console.log("Login request received:", req.body);
 
-        if (!loginId || !password || !type) {
-            console.warn("loginId, password, and type are required.");
-            return res.status(400).send({
-                success: false,
-                message: "loginId, password, and type are required."
-            });
-        }
+        // if (!loginId || !password || !type) {
+        //     console.warn("loginId, password, and type are required.");
+        //     return res.status(400).send({
+        //         success: false,
+        //         message: "loginId, password, and type are required."
+        //     });
+        // }
 
         let user: any = null;
 
