@@ -13,22 +13,24 @@ class WishlistService {
             throw new AppError("Missing user ID or item", 400);
         }
 
-        const updatedWishList = await WishList.findOneAndUpdate(
+        //findOneandUpdate
+        const updatedWishList = await WishList.findOne(
             {
                 userId,
                 items: { $elemMatch: { product: productId, variant: variantId } }
             },
-            { $inc: { 'items.$.quantity': item.quantity } },
-            { new: true }
+            // { $inc: { 'items.$.quantity': item.quantity } },
+            // { new: true }
         );
 
         console.debug("\n Updated wishlist ==> ", updatedWishList);
         if (updatedWishList) {
-            return {
-                success: true,
-                message: "Product quantity updated successfully",
-                data: updatedWishList
-            };
+            throw new AppError("Product already in the cart", 400);
+            // return {
+            //     success: true,
+            //     message: "Product quantity updated successfully",
+            //     data: updatedWishList
+            // };
         }
 
         // Add new item
@@ -45,7 +47,7 @@ class WishlistService {
                     }
                 }
             },
-            { new: true, upsert: true }
+            { new: true, upsert: true, runValidators: true }
         );
 
         return {
@@ -93,50 +95,71 @@ class WishlistService {
             }
         }).lean();
 
+        const price_breakdown = {
+            total_price: 0,
+            shipping_price: 0,
+            lens_package_price: 0,
+            sub_total: 0
+        }
+
         if (!wishlist || wishlist.items.length === 0) {
-            return [];
+            return {
+                items: [],
+                price_breakdown
+            };
         }
 
         console.debug(`\n Wishlist ==> ${JSON.stringify(wishlist, null, 2)}`);
 
         // Process the items to structure the final response : For all items in wishlist
         // Basically filter the corrected variant among all the variant of producty as per the wishlist variant id
-        const populatedItems = await Promise.all(
-            wishlist.items.map(async (item: any) => {
-                try {
-                    const variant = item.product.variants?.find(
-                        (v: any) => v._id.toString() === item.variant?.toString()
-                    );
-                    if (!variant) {
-                        console.log(`Variant ${item.variant} not found`);
-                        return null;
-                    }
-
-                    return {
-                        _id: item._id,
-                        product: {
-                            id: item.product._id,
-                            brand_name: item.product.brand_name,
-                            productCode: item.product.productCode,
-                            vendorId: item.product.vendorId
-                        },
-                        onModel: item.onModel,
-                        variant,
-                        quantity: item.quantity,
-                        prescription: item.prescription,
-                        lens_package_detail: item.lens_package_detail
-                    };
-                } catch (err) {
-                    console.error(`Error populating item:`, err);
+        const populatedItems = await Promise.all(wishlist.items.map(async (item: any) => {
+            try {
+                const variant = item.product.variants?.find(
+                    (v: any) => v._id.toString() === item.variant?.toString()
+                );
+                if (!variant) {
+                    console.log(`Variant ${item.variant} not found`);
                     return null;
                 }
-            })
-        );
 
-        console.debug(`\n Populated items ==> ${JSON.stringify(populatedItems, null, 2)}`);
-        const filteredItems = populatedItems.filter(item => item !== null); //
+                return {
+                    _id: item._id,
+                    product: {
+                        id: item.product._id,
+                        brand_name: item.product.brand_name,
+                        productCode: item.product.productCode,
+                        vendorId: item.product.vendorId
+                    },
+                    onModel: item.onModel,
+                    variant,
+                    quantity: item.quantity,
+                    prescription: item.prescription,
+                    lens_package_detail: item.lens_package_detail
+                };
+            } catch (err) {
+                console.error(`Error populating item:`, err);
+                return null;
+            }
+        }))
 
-        return filteredItems;
+        const filteredItems = populatedItems.filter((item): item is any => item !== null); //
+
+
+
+        filteredItems.map((item: any) => {
+            price_breakdown.sub_total += item.variant.price.total_price * item.quantity;
+            price_breakdown.lens_package_price += item.lens_package_detail.package_price * item.quantity;
+            price_breakdown.shipping_price += item.variant.price.shipping_price.custom === false ? item.variant.price.shipping_price.value : 0;
+        })
+        price_breakdown.total_price = price_breakdown.sub_total + price_breakdown.lens_package_price + price_breakdown.shipping_price;
+        console.debug(`\n Filtered items ==> ${JSON.stringify(filteredItems, null, 2)}`);
+        console.debug(`\n Price breakdown ==> ${JSON.stringify(price_breakdown, null, 2)}`);
+
+        return {
+            items: filteredItems,
+            price_breakdown
+        };
     }
 
     async clearWishlist(userId: string, session?: mongoose.ClientSession) {

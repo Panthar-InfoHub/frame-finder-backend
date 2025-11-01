@@ -154,4 +154,29 @@ export class CouponController {
             return;
         }
     }
+
+    breakDownCoupon = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const code = req.query.code as string;
+            // console.debug("\n Requested body ==> ", req.body);
+
+            const userId = req.user?.id!;
+
+            const break_down_coupon = await couponService.couponBreakdown(userId, code);
+            // console.debug("\n Break down coupon ==> ", break_down_coupon);
+
+            const { message, ...data } = break_down_coupon;
+
+            return res.status(200).send({
+                success: true,
+                message,
+                data
+            });
+
+        } catch (error) {
+            console.error("Error while breaking down coupon ==> ", error);
+            next(error);
+            return;
+        }
+    }
 }

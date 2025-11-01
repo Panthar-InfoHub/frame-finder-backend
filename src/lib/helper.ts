@@ -21,8 +21,22 @@ export function generateReadableProductCode(prefix: string): string {
     return `${prefix}-${timestamp}${random}`.toUpperCase(); // e.g., FRM-1A2B3
 }
 
+export const get_item_by_vendor = (orderItems: OrderItem[]) => {
+    const item_by_vendor: { [vendorId: string]: any[] } = {};
+    for (const item of orderItems) {
+        const vendorId = item.vendorId.toString();
+
+        if (!item_by_vendor[vendorId]) {
+            item_by_vendor[vendorId] = [];
+        }
+
+        item_by_vendor[vendorId].push(item);
+    }
+    return item_by_vendor;
+}
+
 export const create_order_items = (wishListItems: any): OrderItem[] => {
-    return wishListItems.map((item: any) => ({
+    return wishListItems.items.map((item: any) => ({
         productId: item.product.id,
         onModel: item.onModel,
         variantId: item.variant._id,
