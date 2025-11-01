@@ -39,8 +39,12 @@ export const webHookHandler = async (req: Request, res: Response, next: NextFunc
             }
 
             //Let backend handle the payment creation and order update
-            orderService.webhookOrderHandler(order_ids, user_id, orderEntity, paymentEntity, signature);
+            const orders = await orderService.webhookOrderHandler(order_ids, user_id, orderEntity, paymentEntity, signature);
             res.status(200).send("OK");
+
+            //Reduce stock of order items
+            await orderService.reduceStock(orders);
+            return;
         }
 
     } catch (error) {

@@ -5,6 +5,7 @@ import { Vendor } from "../models/Vendor.js";
 import { generateTokens } from "../lib/uitils.js";
 import AppError from "../middlwares/Error.js";
 import { User } from "../models/user.js";
+import { userService } from "../services/user-services.js";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -12,17 +13,17 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         const { loginId, password, type } = req.body;
         console.log("Login request received:", req.body);
 
-        // if (!loginId || !password || !type) {
-        //     console.warn("loginId, password, and type are required.");
-        //     return res.status(400).send({
-        //         success: false,
-        //         message: "loginId, password, and type are required."
-        //     });
-        // }
-
         let user: any = null;
 
         if (type === "ADMIN" || type === "SUPER_ADMIN") {
+
+            if (!loginId || !password || !type) {
+                console.warn("loginId, password, and type are required.");
+                return res.status(400).send({
+                    success: false,
+                    message: "loginId, password, and type are required."
+                });
+            }
             user = await Admin.findOne({ email: loginId });
 
             console.log("Admin lookup result ==> ", user);
@@ -47,6 +48,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         }
 
         if (type === "VENDOR") {
+            if (!loginId || !password || !type) {
+                console.warn("loginId, password, and type are required.");
+                return res.status(400).send({
+                    success: false,
+                    message: "loginId, password, and type are required."
+                });
+            }
             user = await Vendor.findOne({ $or: [{ email: loginId }, { phone: loginId }] }).select("+password");;
 
             console.debug("Vendor lookup result ==> ", user);
@@ -75,12 +83,16 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
             console.debug("User lookup result ==> ", user);
 
-            if (!user) {
-                console.warn("\nUser not found, check your credentials...");
+            if (!user && password && loginId) {
+                console.warn("\n Credential auth : User not found, check your credentials...");
                 return res.status(401).send({
                     success: false,
                     message: "User not found, check your credentials..."
                 });
+            }
+            if (!user && !password) {
+                console.warn("\n OAuth : User not found, creating a new user...");
+                user = await userService.createUser({ email: loginId });
             }
 
             let isPasswordCorrect = false;

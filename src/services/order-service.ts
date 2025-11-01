@@ -7,6 +7,8 @@ import { create_order_items, discount_price } from "../lib/helper.js";
 import { couponService } from "./coupon-services.js";
 import { OrderItem } from "../lib/types.js";
 import { Payment } from "../models/payment.js";
+import { ProductService } from "./product-service.js";
+import { getModel } from "../lib/uitils.js";
 
 interface OrderInfo {
     order_id: mongoose.Types.ObjectId;
@@ -246,7 +248,7 @@ class OrderClass {
     async webhookOrderHandler(orderIds: string[], userId: string, orderEntity: any, paymentEntity: any, signature: any) {
         const session = await mongoose.startSession();
         try {
-            await session.withTransaction(async () => {
+            const result = await session.withTransaction(async () => {
                 const orders = await Order.find({
                     _id: { $in: orderIds },
                     userId: userId
@@ -283,15 +285,40 @@ class OrderClass {
                 );
                 console.debug(`\n ${updatedOrder.modifiedCount} Orders updated in webhook `)
 
-                await wishlistService.clearWishlist(userId);
+                await wishlistService.clearWishlist(userId, session);
                 console.debug(`\n Wishlist cleared for user ${userId}`);
-                return;
+
+                return orders;
             })
             console.debug(`\n Order webhook completed successfully.`);
-
+            return result;
         } catch (error) {
             console.error("\n Error in order webhook handler ==> ", error);
             throw new AppError("Error in order webhook handler", 500);
+        } finally {
+            await session.endSession();
+        }
+    }
+
+
+    //Reduce stock of order items
+    async reduceStock(orders: any[]) {
+        console.debug("\n Reducing stock for orders ")
+        const session = await mongoose.startSession();
+        try {
+            await session.withTransaction(async () => {
+                orders.map((order) => {
+                    order.items.map(async (item: OrderItem) => {
+                        const productModel = getModel(item.onModel);
+                        const product_service = new ProductService(productModel, item.onModel)
+                        await product_service.updateStock(item.productId, item.variantId, 'decrease', item.quantity, session);
+                        console.debug(`\n Stock reduced for ${item.productId} by ${item.quantity}`);
+                    })
+                })
+            })
+        } catch (error) {
+            console.error("\n Error in reduce stock ==> ", error);
+            throw new AppError("Error in reduce stock", 500);
         } finally {
             await session.endSession();
         }

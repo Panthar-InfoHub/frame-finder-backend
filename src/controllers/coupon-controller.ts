@@ -56,8 +56,8 @@ export class CouponController {
     searchCoupon = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const search = req.query.search as string;
-            const page = parseInt(req.query.page as string);
-            const limit = parseInt(req.query.limit as string);
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
             const vendorId = parseInt(req.query.vendorId as string);
 
             const skip: number = (page - 1) * limit;
