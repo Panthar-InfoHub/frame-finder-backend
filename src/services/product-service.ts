@@ -1,4 +1,4 @@
-import mongoose, { Model, startSession, Document } from 'mongoose';
+import mongoose, { Model, startSession, Document, ClientSession } from 'mongoose';
 import AppError from '../middlwares/Error.js';
 
 interface IProduct extends Document {
@@ -40,12 +40,12 @@ export class ProductService<T extends IProduct> {
     }
 
     // Update stock of product variant
-    async updateStock(id: string, variantId: string, operation: 'increase' | 'decrease', quantity: number, ...additionalParams: any[]) {
+    async updateStock(id: string, variantId: string, operation: 'increase' | 'decrease', quantity: number, session?: ClientSession, ...additionalParams: any[]) {
         const finalQuantity = operation === "increase" ? Math.abs(quantity) : -Math.abs(quantity);
         const product = await this.model.findOneAndUpdate(
             { _id: id, "variants._id": variantId },
             { $inc: { "variants.$.stock.current": finalQuantity } },
-            { new: true }
+            { new: true, session }
         );
         if (!product) {
             console.warn(`Product with ID ${id} and variant with ID ${variantId} not found.`);

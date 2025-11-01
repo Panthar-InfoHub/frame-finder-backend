@@ -1,4 +1,11 @@
 import jwt from "jsonwebtoken";
+import { Product } from "../models/products.js";
+import { Sunglass } from "../models/sunglass.js";
+import { Reader } from "../models/reader.js";
+import { ContactLens } from "../models/contact-lens.js";
+import { ColorContactLens } from "../models/color-contact-lens.js";
+import mongoose from "mongoose";
+import AppError from "../middlwares/Error.js";
 
 export interface JwtPayload {
     id: string;
@@ -48,4 +55,15 @@ export const getStartDate = (p: string): Date => {
         default: date.setMonth(date.getMonth() - 6); break; //Default 6 month data
     }
     return date;
+};
+
+export const getModel = (model: string): mongoose.Model<any> => {
+    switch (model) {
+        case 'Product': return Product;
+        case 'Sunglass': return Sunglass;
+        case 'Reader': return Reader;
+        case 'ContactLens': return ContactLens;
+        case 'ColorContactLens': return ColorContactLens;
+        default: throw new AppError("Invalid model name", 400);
+    }
 };

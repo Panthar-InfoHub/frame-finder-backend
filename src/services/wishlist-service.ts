@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import AppError from "../middlwares/Error.js";
 import { WishList } from "../models/Wishlist.js";
 
@@ -138,7 +139,7 @@ class WishlistService {
         return filteredItems;
     }
 
-    async clearWishlist(userId: string) {
+    async clearWishlist(userId: string, session?: mongoose.ClientSession) {
         console.debug("\nClearing wishlist...");
         console.debug("User ID for clearing wishlist:", userId);
 
@@ -150,7 +151,7 @@ class WishlistService {
         const result = await WishList.findOneAndUpdate(
             { userId },
             { $set: { items: [] } },
-            { new: true }
+            { new: true, session }
         );
 
         if (!result) {
