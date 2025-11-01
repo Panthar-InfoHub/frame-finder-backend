@@ -36,8 +36,8 @@ class OrderClass {
                     throw new AppError(`No user found for this user id ==> ${userId}`, 400);
                 }
 
-                const wishListItems = await wishlistService.getWishlistByUser(userId);
-                if (wishListItems.length === 0) {
+                const wishListItems: { items: any[], price_breakdown: any } = await wishlistService.getWishlistByUser(userId);
+                if (wishListItems.items.length === 0) {
                     throw new AppError("Cart is empty, can't create order", 400);
                 }
 

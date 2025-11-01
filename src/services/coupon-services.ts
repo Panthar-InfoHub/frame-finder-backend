@@ -3,20 +3,11 @@ import AppError from "../middlwares/Error.js";
 import { Coupon } from "../models/coupon.js"
 import { Order } from "../models/orders.js";
 import { wishlistService } from "./wishlist-service.js";
-import { create_order_items, discount_price } from "../lib/helper.js";
+import { create_order_items, discount_price, get_item_by_vendor } from "../lib/helper.js";
+import { CouponBreakdown, OrderItem } from "../lib/types.js";
+import { Vendor } from "../models/Vendor.js";
 
 class CouponService {
-
-    private isSameVendorItem = async (userId: string, vendorId: string): Promise<Boolean> => {
-        const wishListItems = await wishlistService.getWishlistByUser(userId);
-        const ordered_items = create_order_items(wishListItems);
-
-        return ordered_items.every((item) =>
-            item.vendorId.toString() === vendorId.toString()
-        );
-
-    }
-
 
     createCoupon = async (data: any) => {
         return await Coupon.create(data);
@@ -207,7 +198,6 @@ class CouponService {
             }
         ]);
 
-
         if (!result.length) {
             throw new AppError(
                 `You have already used this coupon ${preCoupon.user_usage_limit} time(s). Usage limit reached.`,
@@ -245,7 +235,6 @@ class CouponService {
             };
 
         } else {
-
             return {
                 valid: true,
                 coupon: {
@@ -262,6 +251,86 @@ class CouponService {
             };
         }
     };
+
+
+
+    //Coupon Breakdownb :
+    /**
+     * Fetch all items from wishlist of user : To get total_amount and pass it to verify coupon function
+     * Use verify coupon function to get the coupon breakdown : Mainly because of discount price and total amount
+     * If global : All item detail with their respected discount price via proportional discount
+     * If vendor : All item along with their respected vendor and discounted price on vendor basis
+     */
+
+    couponBreakdown = async (userId: string, couponCode: string) => {
+        const wishListItems: { items: any[], price_breakdown: any } = await wishlistService.getWishlistByUser(userId);
+        const couponBreakdown: CouponBreakdown = await this.verifyCoupon(couponCode, userId, wishListItems.price_breakdown.sub_total);
+        const orderItems = create_order_items(wishListItems);
+
+        if (couponBreakdown.coupon.scope === "global") {
+            //All order item proportional breakdown
+            const items_breakdown = orderItems.map((item) => {
+                return {
+                    ...item,
+                    discount: (item.price / wishListItems.price_breakdown.sub_total) * couponBreakdown.discount_price,
+                }
+            })
+
+            return {
+                valid: true,
+                coupon: couponBreakdown.coupon,
+                items_breakdown,
+                total_discount_price: couponBreakdown.discount_price,
+                message: couponBreakdown.message
+            }
+
+        } else {
+            //item by vendor here 
+
+            const item_by_vendor: { [vendorId: string]: any[] } = get_item_by_vendor(orderItems);
+            const items_breakdown: any = await Promise.all(Object.entries(item_by_vendor).map(async ([vendorId, items]: [string, any[]]) => {
+
+                const is_coupon_vendor = vendorId === couponBreakdown.coupon.vendorId?.toString();
+
+                if (is_coupon_vendor) {
+                    const sub_total: number = items.reduce((sum, item: OrderItem) => {
+                        return sum + (item.price * item.quantity)
+                    }, 0)
+
+                    const discount = discount_price(couponBreakdown.coupon.type, sub_total, couponBreakdown.coupon.value);
+                    const vendor = await Vendor.findById(vendorId).select('_id business_owner logo banner business_name');
+                    return {
+                        vendor,
+                        items,
+                        sub_total,
+                        discount,
+                        is_coupon_vendor
+                    }
+                } else {
+                    const sub_total: number = items.reduce((sum, item: OrderItem) => {
+                        return sum + (item.price * item.quantity)
+                    }, 0)
+                    const vendor = await Vendor.findById(vendorId).select('_id business_owner logo banner business_name');
+
+                    return {
+                        vendor,
+                        items,
+                        sub_total,
+                        discount: 0,  // No discount for non-coupon vendors
+                        is_coupon_vendor
+                    }
+                }
+            }))
+
+            return {
+                valid: true,
+                coupon: couponBreakdown.coupon,
+                items_breakdown,
+                total_discount_price: couponBreakdown.discount_price,
+                message: couponBreakdown.message
+            }
+        }
+    }
 }
 
 export const couponService = new CouponService;

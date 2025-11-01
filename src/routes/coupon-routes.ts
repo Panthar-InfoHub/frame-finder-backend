@@ -7,6 +7,7 @@ export const couponRouter = Router();
 const couponController = new CouponController();
 
 
+couponRouter.get("/breakdown", [auth], couponController.breakDownCoupon);
 couponRouter.get("/search", [auth], couponController.searchCoupon);
 couponRouter.get("/:id", [auth], couponController.getCouponByID);
 

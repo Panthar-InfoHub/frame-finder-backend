@@ -23,3 +23,18 @@ export interface OrderItem {
         business_owner: string;
     };
 }
+
+export interface CouponBreakdown {
+    valid: boolean;
+    coupon: {
+        code: string;
+        type: string;
+        value: number;
+        scope: string;
+        vendorId?: string;
+    };
+    discount_price: number;
+    total_amount: number;
+    message: string;
+    vendorId?: string;
+}
