@@ -149,7 +149,7 @@ class WishlistService {
 
         filteredItems.map((item: any) => {
             price_breakdown.sub_total += item.variant.price.total_price * item.quantity;
-            price_breakdown.lens_package_price += item.lens_package_detail.package_price * item.quantity;
+            price_breakdown.lens_package_price += item?.lens_package_detail?.package_price * item.quantity || 0;
             price_breakdown.shipping_price += item.variant.price.shipping_price.custom === false ? item.variant.price.shipping_price.value : 0;
         })
         price_breakdown.total_price = price_breakdown.sub_total + price_breakdown.lens_package_price + price_breakdown.shipping_price;
