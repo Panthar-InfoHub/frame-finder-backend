@@ -99,6 +99,6 @@ const PORT = process.env.PORT || 8080
 connectDB()
 // this is only to test the pull request
 app.listen(PORT, () => {
-    startCronBestSellerJob();
+    // startCronBestSellerJob();
     console.log(`\nBackend server is started... \n PORT ==> ${PORT}`)
 })

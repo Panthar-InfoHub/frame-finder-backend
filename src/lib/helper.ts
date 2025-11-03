@@ -39,10 +39,10 @@ export const create_order_items = (wishListItems: any): OrderItem[] => {
     return wishListItems.items.map((item: any) => ({
         productId: item.product.id,
         onModel: item.onModel,
-        variantId: item.variant._id,
+        variantId: item?.variant?._id || "",
         vendorId: item.product.vendorId._id,
         productName: item.product.brand_name,
-        price: item.variant.price.total_price,
+        price: item?.variant?.price?.total_price || item.price.total_price,
         quantity: item.quantity,
         prescription: item.prescription,
         lens_package_detail: item.lens_package_detail,
@@ -50,10 +50,10 @@ export const create_order_items = (wishListItems: any): OrderItem[] => {
             productCode: item.product.productCode,
             brand_name: item.product.brand_name,
             variant_details: {
-                total_price: item.variant.price.total_price,
-                frame_color: item.variant.price.frame_color,
-                temple_color: item.variant.price.temple_color,
-                image_url: item.variant.images[0].url
+                total_price: item?.variant?.price?.total_price || item.price.total_price,
+                frame_color: item?.variant?.price?.frame_color || "",
+                temple_color: item?.variant?.price?.temple_color || "",
+                image_url: item?.variant?.images[0].url || item.images[0].url
             },
         },
         vendor_snapshot: {
