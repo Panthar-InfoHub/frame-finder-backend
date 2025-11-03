@@ -88,7 +88,7 @@ class WishlistService {
         const wishlist = await WishList.findOne({ userId }).populate({
             path: "items.product",
             match: { status: 'active' },
-            select: 'brand_name productCode variants vendorId',
+            select: 'brand_name productCode variants vendorId price images',
             populate: {
                 path: 'vendorId',
                 select: 'business_name business_owner'
@@ -109,34 +109,52 @@ class WishlistService {
             };
         }
 
-        console.debug(`\n Wishlist ==> ${JSON.stringify(wishlist, null, 2)}`);
 
         // Process the items to structure the final response : For all items in wishlist
         // Basically filter the corrected variant among all the variant of producty as per the wishlist variant id
         const populatedItems = await Promise.all(wishlist.items.map(async (item: any) => {
             try {
-                const variant = item.product.variants?.find(
-                    (v: any) => v._id.toString() === item.variant?.toString()
-                );
-                if (!variant) {
-                    console.log(`Variant ${item.variant} not found`);
-                    return null;
+                if (item.variant) {
+                    const variant = item.product.variants?.find(
+                        (v: any) => v._id.toString() === item.variant?.toString()
+                    );
+                    if (!variant) {
+                        console.log(`Variant ${item.variant} not found`);
+                        return null;
+                    }
+
+                    return {
+                        _id: item._id,
+                        product: {
+                            id: item.product._id,
+                            brand_name: item.product.brand_name,
+                            productCode: item.product.productCode,
+                            vendorId: item.product.vendorId
+                        },
+                        onModel: item.onModel,
+                        variant,
+                        quantity: item.quantity,
+                        prescription: item.prescription,
+                        lens_package_detail: item.lens_package_detail
+                    };
+                } else {
+                    return {
+                        _id: item._id,
+                        product: {
+                            id: item.product._id,
+                            brand_name: item.product.brand_name,
+                            productCode: item.product.productCode,
+                            vendorId: item.product.vendorId,
+                        },
+                        images: item.product.images,
+                        price: item.product.price,
+                        onModel: item.onModel,
+                        quantity: item.quantity,
+                        prescription: item.prescription,
+                        lens_package_detail: item.lens_package_detail
+                    };
                 }
 
-                return {
-                    _id: item._id,
-                    product: {
-                        id: item.product._id,
-                        brand_name: item.product.brand_name,
-                        productCode: item.product.productCode,
-                        vendorId: item.product.vendorId
-                    },
-                    onModel: item.onModel,
-                    variant,
-                    quantity: item.quantity,
-                    prescription: item.prescription,
-                    lens_package_detail: item.lens_package_detail
-                };
             } catch (err) {
                 console.error(`Error populating item:`, err);
                 return null;
@@ -145,15 +163,21 @@ class WishlistService {
 
         const filteredItems = populatedItems.filter((item): item is any => item !== null); //
 
-
+        // console.debug(`\n Filtered itenssss ==> ${JSON.stringify(filteredItems, null, 2)}`);
 
         filteredItems.map((item: any) => {
-            price_breakdown.sub_total += item.variant.price.total_price * item.quantity;
+            console.debug(`\n Filtered itenssss ==> ${JSON.stringify(item, null, 2)}`);
+
+            if (item.variant) {
+                price_breakdown.sub_total += item?.variant?.price?.total_price * item.quantity;
+                price_breakdown.shipping_price += item?.variant?.price?.shipping_price?.custom === true ? item.variant.price.shipping_price.value : 0;
+            } else {
+                price_breakdown.sub_total += item?.price?.total_price * item.quantity;
+                price_breakdown.shipping_price += item?.price?.shipping_price?.custom === true ? item.price.shipping_price.value : 0;
+            }
             price_breakdown.lens_package_price += item?.lens_package_detail?.package_price * item.quantity || 0;
-            price_breakdown.shipping_price += item.variant.price.shipping_price.custom === false ? item.variant.price.shipping_price.value : 0;
         })
         price_breakdown.total_price = price_breakdown.sub_total + price_breakdown.lens_package_price + price_breakdown.shipping_price;
-        console.debug(`\n Filtered items ==> ${JSON.stringify(filteredItems, null, 2)}`);
         console.debug(`\n Price breakdown ==> ${JSON.stringify(price_breakdown, null, 2)}`);
 
         return {
