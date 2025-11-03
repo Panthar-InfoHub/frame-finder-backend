@@ -166,7 +166,6 @@ class WishlistService {
         // console.debug(`\n Filtered itenssss ==> ${JSON.stringify(filteredItems, null, 2)}`);
 
         filteredItems.map((item: any) => {
-            console.debug(`\n Filtered itenssss ==> ${JSON.stringify(item, null, 2)}`);
 
             if (item.variant) {
                 price_breakdown.sub_total += item?.variant?.price?.total_price * item.quantity;

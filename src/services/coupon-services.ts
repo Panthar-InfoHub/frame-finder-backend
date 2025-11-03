@@ -264,8 +264,11 @@ class CouponService {
 
     couponBreakdown = async (userId: string, couponCode: string) => {
         const wishListItems: { items: any[], price_breakdown: any } = await wishlistService.getWishlistByUser(userId);
+        console.debug("\n Wishlist items ==> ", wishListItems);
         const couponBreakdown: CouponBreakdown = await this.verifyCoupon(couponCode, userId, wishListItems.price_breakdown.sub_total);
         const orderItems = create_order_items(wishListItems);
+
+        console.debug("\n Order items ==> ", orderItems);
 
         if (couponBreakdown.coupon.scope === "global") {
             //All order item proportional breakdown
@@ -288,6 +291,8 @@ class CouponService {
             //item by vendor here 
 
             const item_by_vendor: { [vendorId: string]: any[] } = get_item_by_vendor(orderItems);
+
+            console.debug("\n Item by vendor ==> ", item_by_vendor);
             const items_breakdown: any = await Promise.all(Object.entries(item_by_vendor).map(async ([vendorId, items]: [string, any[]]) => {
 
                 const is_coupon_vendor = vendorId === couponBreakdown.coupon.vendorId?.toString();
