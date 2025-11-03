@@ -56,10 +56,8 @@ export const getAllVendors = async (req: Request, res: Response, next: NextFunct
             message: "Vendors fetched successfully",
             data: vendors,
             pagination: {
-                totalCount,
                 totalPages: Math.ceil(totalCount / limit),
-                page,
-                limit
+                total: totalCount,
             }
         });
         return;

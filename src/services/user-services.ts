@@ -76,10 +76,8 @@ class UserClass {
         return {
             data: users,
             pagination: {
-                totalUser,
                 totalPages: Math.ceil(totalUser / limit),
-                page,
-                limit
+                total: totalUser,
             }
         }
     }

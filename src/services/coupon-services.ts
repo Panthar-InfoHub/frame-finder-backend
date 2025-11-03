@@ -45,9 +45,8 @@ class CouponService {
         return {
             coupons,
             pagination: {
-                limit,
-                totalCoupons,
-                pages: Math.ceil(totalCoupons / Number(limit))
+                total: totalCoupons,
+                totalPages: Math.ceil(totalCoupons / Number(limit))
             },
         };
     };

@@ -72,7 +72,7 @@ export class ProductService<T extends IProduct> {
         return {
             products,
             pagination: {
-                totalProducts,
+                total: totalProducts,
                 totalPages: Math.ceil(totalProducts / limit)
             }
         };

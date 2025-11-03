@@ -3,7 +3,7 @@ import AppError from "../middlwares/Error.js";
 import { wishlistService } from "./wishlist-service.js";
 import { Order } from "../models/orders.js";
 import { userService } from "./user-services.js";
-import { create_order_items, discount_price } from "../lib/helper.js";
+import { create_order_items, discount_price, get_item_by_vendor } from "../lib/helper.js";
 import { couponService } from "./coupon-services.js";
 import { OrderItem } from "../lib/types.js";
 import { Payment } from "../models/payment.js";
@@ -46,20 +46,11 @@ class OrderClass {
                 console.debug(`\n Order items mapped properly for creation ==> ${JSON.stringify(orderItems, null, 2)}`)
 
                 //Grouping items by vendor Id 
-                const item_by_vendor: { [vendorId: string]: any[] } = {};
-                for (const item of orderItems) {
-                    const vendorId = item.vendorId.toString();
-
-                    if (!item_by_vendor[vendorId]) {
-                        item_by_vendor[vendorId] = [];
-                    }
-
-                    item_by_vendor[vendorId].push(item);
-                }
+                const item_by_vendor: { [vendorId: string]: any[] } = get_item_by_vendor(orderItems);
 
                 //Calculate Overall Cart total for proprotional break down of discount
                 const order_total = orderItems.reduce((sum, item) => {
-                    return sum + (item.price * item.quantity) + item?.lens_package_detail?.package_price
+                    return sum + (item.price * item.quantity) + (item?.lens_package_detail?.package_price || 0)
                 }, 0);
 
                 let coupon = null;
@@ -74,7 +65,7 @@ class OrderClass {
                 for (const [vendorId, items] of Object.entries(item_by_vendor)) {
 
                     const sub_total: number = items.reduce((sum, item: OrderItem) => {
-                        return sum + (item.price * item.quantity) + item?.lens_package_detail?.package_price
+                        return sum + (item.price * item.quantity) + (item?.lens_package_detail?.package_price || 0)
                     }, 0)
                     console.debug(`\n Subtotal for vendor ${vendorId} Total amount ==> ${sub_total}`);
 
