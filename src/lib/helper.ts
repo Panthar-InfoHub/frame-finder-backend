@@ -39,7 +39,7 @@ export const create_order_items = (wishListItems: any): OrderItem[] => {
     return wishListItems.items.map((item: any) => ({
         productId: item.product.id,
         onModel: item.onModel,
-        variantId: item?.variant?._id || "",
+        variantId: item?.variant?._id || null,
         vendorId: item.product.vendorId._id,
         productName: item.product.brand_name,
         price: item?.variant?.price?.total_price || item.price.total_price,
