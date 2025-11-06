@@ -80,7 +80,7 @@ export class ProductService<T extends IProduct> {
 
     // Get product by id
     async getById(id: string) {
-        const item = await this.model.findById(id).populate("vendorId", "business_name email phone");
+        const item = await this.model.findById(id).populate("vendorId", "business_name email phone rating total_reviews year_of_experience");
         if (!item || item.status === 'inactive') {
             console.warn(`Product with ID ${id} not found`);
             throw new AppError(`${this.modelName} not found`, 404);

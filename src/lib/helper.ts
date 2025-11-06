@@ -1,4 +1,4 @@
-import { OrderItem } from "./types.js";
+import { OrderItem, ProductQuery } from "./types.js";
 
 export const generatePassword = (type: string): string => {
     let password = "";
@@ -115,4 +115,43 @@ export function getDateRange(periodName: string): { start: Date | null; end: Dat
     }
 
     return { start, end };
+}
+
+
+
+export function buildProductFilter(query: ProductQuery) {
+    let filter: any = { status: 'active' };
+
+    // Search logic
+    if (query.search) {
+        const escapedSearch = query.search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        filter = {
+            ...filter,
+            $or: [
+                { productCode: { $regex: escapedSearch, $options: 'i' } },
+                { $text: { $search: query.search } }
+            ]
+        };
+    }
+
+    if (query.vendorId) {
+        filter.vendorId = query.vendorId;
+    }
+
+    const addInFilter = (key: string, dbField: string, target: any = filter) => {
+        if (query[key as keyof ProductQuery]) {
+            const arr = (query[key as keyof ProductQuery] as string).split(',').map(s => s.trim());
+            target[dbField] = { $in: arr };
+        }
+    };
+
+    addInFilter('material', 'material');
+    addInFilter('shape', 'shape');
+    addInFilter('style', 'style');
+    addInFilter('gender', 'gender');
+    addInFilter('frame_color', 'variants.frame_color');
+    addInFilter('temple_color', 'variants.temple_color');
+    addInFilter('lens_color', 'variants.lens_color');
+
+    return filter;
 }
