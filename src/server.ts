@@ -30,6 +30,7 @@ import { bestSellerRouter } from "./routes/best-seller-routes.js"
 import { startCronBestSellerJob } from "./jobs/jobs.js"
 import { reviewRouter } from "./routes/review-routes.js"
 import { webhookRouter } from "./routes/webhook-route.js"
+import { frontend_router } from "./routes/frontend-routes.js"
 
 //Configurations
 const app = express()
@@ -51,6 +52,7 @@ app.use("/api/v1/misc", miscRouter);
 app.use("/api/v1/data", dataRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/frontend", frontend_router);
 app.use("/api/v1/vendor", vendorRouter);
 app.use("/api/v1/wishlist", wishlistRouter);
 app.use("/api/v1/vendor-misc", vendorMiscRouter);

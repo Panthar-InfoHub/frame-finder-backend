@@ -38,3 +38,15 @@ export interface CouponBreakdown {
     message: string;
     vendorId?: string;
 }
+
+export type ProductQuery = {
+    vendorId?: string;
+    material?: string;
+    shape?: string;
+    style?: string;
+    search?: string;
+    gender?: string;
+    frame_color?: string;
+    temple_color?: string;
+    lens_color?: string;
+};

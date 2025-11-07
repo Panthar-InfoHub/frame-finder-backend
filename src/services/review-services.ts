@@ -87,9 +87,12 @@ class ReviewServices {
     }
 
     //Get reviews of a Product
-    getReviewsByProduct = async (productId: string) => {
-        const reviews = await Review.find({ product: productId }).populate('user', 'name email img').sort({ createdAt: -1 }).lean();
-        return reviews;
+    getReviewsByProduct = async (productId: string, userId?: string | undefined) => {
+        const [reviews, user_reviews] = await Promise.all([
+            Review.find({ product: productId, user: { $ne: userId } }).populate('user', 'name email img').sort({ createdAt: -1 }).lean(),
+            Review.find({ user: userId, product: productId }).populate('product', 'productCode brand_name').populate('user', 'name email img').sort({ createdAt: -1 }).lean()
+        ])
+        return { reviews, user_reviews };
     }
 }
 

@@ -11,4 +11,4 @@ reviewRouter.delete("/:id", [auth], reviewController.delete_review);
 
 // === Get Data ===
 reviewRouter.get("/user/:id", reviewController.get_user_reviews);
-reviewRouter.get("/product/:id", reviewController.get_product_reviews);
+reviewRouter.get("/product/:id", [auth], reviewController.get_product_reviews);

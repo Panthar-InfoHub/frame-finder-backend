@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import AppError from "../middlwares/Error.js";
 import { Product } from "../models/products.js";
 import { ProductService } from "../services/product-service.js";
+import { buildProductFilter } from "../lib/helper.js";
+import { ProductQuery } from "../lib/types.js";
 
 const productService = new ProductService(Product, "Product");
 
@@ -123,29 +125,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
         const page = parseInt(req.params.page as string) || 1;
         const limit = parseInt(req.params.limit as string) || 100;
         const skip = (page - 1) * limit;
-        const vendorId = req.query.vendorId as string;
-
-        const search = req.query.search as string || "";
-
-        console.debug("\nSearch query: ", search);
-
-        let filter: any = { status: 'active' };
-
-        if (search) {
-            const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-
-            filter = {
-                ...filter,
-                $or: [
-                    { productCode: { $regex: escapedSearch, $options: 'i' } },
-                    { $text: { $search: search } }
-                ]
-            };
-        }
-
-        if (vendorId) {
-            filter.vendorId = vendorId;
-        }
+        const filter = buildProductFilter(req.query as ProductQuery);
 
         console.debug("Filter for products: ", filter);
 
@@ -205,7 +185,7 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
             throw new AppError("Product ID is required", 400);
         }
 
-        const product : any = await productService.delete(id);
+        const product: any = await productService.delete(id);
 
         console.debug("Deleted product ==> ", product);
         res.status(200).send({
@@ -214,7 +194,7 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
             data: {
                 brand_name: product.brand_name,
                 productCode: product.productCode,
-                id : product._id
+                id: product._id
             }
         });
         return;

@@ -96,9 +96,11 @@ class ReviewController {
     get_product_reviews = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const productId: string = req.params.id;
+            const userId = req.user?.id || undefined;
             console.debug(`\n Product id ==> ${productId}`);
+            console.debug(`\n User id ==> ${userId}`);
 
-            const reviews = await reviewServices.getReviewsByProduct(productId);
+            const reviews = await reviewServices.getReviewsByProduct(productId, userId);
             console.debug(`\n reviews of product ==> ${reviews}`);
 
             return res.status(201).send({
