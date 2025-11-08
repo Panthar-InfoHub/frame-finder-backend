@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Review } from "../models/Review.js"
 import AppError from "../middlwares/Error.js";
+import logger from "../lib/logger.js";
 
 class ReviewServices {
 
@@ -14,17 +15,26 @@ class ReviewServices {
 
         console.debug("Modal ==> ", product)
 
-        let total_reviews = operation === "dec" ? Math.max(0, product.total_reviews - 1) : product.total_reviews + 1;
+        let totalReviews = product.total_reviews;
+        let totalRatingSum = product.rating * totalReviews;
 
-        const avg_rating = ((product.rating * product.total_reviews) + rating) / (total_reviews);
+        if (operation === "dec") {
+            totalReviews = Math.max(0, totalReviews - 1);
+            totalRatingSum -= rating;
+        } else {
+            totalReviews = totalReviews + 1;
+            totalRatingSum += rating;
+        }
+
+        const avgRating = totalReviews === 0 ? 0 : totalRatingSum / totalReviews;
 
 
-        product.rating = parseFloat(avg_rating.toFixed(2));
-        product.total_reviews = total_reviews;
+        product.rating = parseFloat(avgRating.toFixed(2));
+        product.total_reviews = totalReviews;
         await product.save();
 
         console.debug(`\n Updated ${onModel} (${id}) - Avg Rating: ${product.rating}, Total Reviews: ${product.total_reviews}`);
-        return avg_rating;
+        return avgRating;
     }
 
 
@@ -73,7 +83,7 @@ class ReviewServices {
         }
 
         const [vendor_rating, product_rating] = await Promise.all([
-            this.calculate_avg_rating(vendorId, "Vendor", 0, "dec"),
+            this.calculate_avg_rating(vendorId, "Vendor", review.rating, "dec"),
             this.calculate_avg_rating(review.product.toString(), review.onModel, 0, "dec")
         ]);
         console.debug(`\nNew Vendor Rating: ${vendor_rating} | New Product Rating: ${product_rating}`);
@@ -87,12 +97,110 @@ class ReviewServices {
     }
 
     //Get reviews of a Product
-    getReviewsByProduct = async (productId: string, userId?: string | undefined) => {
-        const [reviews, user_reviews] = await Promise.all([
-            Review.find({ product: productId, user: { $ne: userId } }).populate('user', 'name email img').sort({ createdAt: -1 }).lean(),
-            Review.find({ user: userId, product: productId }).populate('product', 'productCode brand_name').populate('user', 'name email img').sort({ createdAt: -1 }).lean()
-        ])
-        return { reviews, user_reviews };
+    getReviewsByProduct = async (productId: string, userId?: string | undefined, page: number = 1, limit: number = 10) => {
+
+        const userIdObject = userId ? new mongoose.Types.ObjectId(userId) : null;
+        const skip = (page - 1) * limit;
+
+        const reviews = await Review.aggregate([
+            { $match: { product: new mongoose.Types.ObjectId(productId) } },
+
+            {
+                $facet: {
+                    currentUserReviews: [
+                        { $match: { user: userIdObject } },
+                        { $sort: { createdAt: -1 } },
+                        {
+                            $lookup: {
+                                from: 'users',
+                                localField: 'user',
+                                foreignField: '_id',
+                                as: 'user'
+                            }
+                        },
+                        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+                        {
+                            $project: {
+                                content: 1,
+                                rating: 1,
+                                product: 1,
+                                user: { name: 1, email: 1, img: 1, _id: 1 },
+                                createdAt: 1
+                            }
+                        }
+                    ],
+
+                    otherUsersReviews: [
+                        { $match: { user: { $ne: userIdObject } } },
+                        { $sort: { createdAt: -1 } },
+                        { $skip: skip },
+                        { $limit: limit },
+                        {
+                            $lookup: {
+                                from: 'users',
+                                localField: 'user',
+                                foreignField: '_id',
+                                as: 'user'
+                            }
+                        },
+                        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+                        {
+                            $project: {
+                                content: 1,
+                                rating: 1,
+                                product: 1,
+                                user: { name: 1, email: 1, img: 1, _id: 1 },
+                                createdAt: 1
+                            }
+                        }
+                    ],
+
+                    ratingDistribution: [
+                        {
+                            $addFields: {
+                                roundedRating: { $toInt: { $floor: "$rating" } }
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: "$roundedRating",
+                                count: { $sum: 1 }
+                            }
+                        },
+                        { $sort: { _id: -1 } }
+                    ],
+
+                    totalCount: [
+                        { $count: "count" }
+                    ]
+                }
+            }
+        ]);
+
+        const result: any = {
+            reviews: reviews[0].otherUsersReviews,
+            user_reviews: reviews[0].currentUserReviews,
+            totalReviews: reviews[0].totalCount[0]?.count || 0,
+            ratingDistribution: {
+                5: 0,
+                4: 0,
+                3: 0,
+                2: 0,
+                1: 0
+            },
+            pagination: {
+                total: reviews[0].totalCount[0]?.count || 0,
+                totalPages: Math.ceil((reviews[0].totalCount[0]?.count || 0) / limit)
+            }
+        };
+
+        reviews[0].ratingDistribution.forEach((item: any) => {
+            if (item._id >= 1 && item._id <= 5) {
+                result.ratingDistribution[item._id] = item.count;
+            }
+        });
+
+        return result;
     }
 }
 
