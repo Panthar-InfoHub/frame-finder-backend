@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { reviewServices } from "../services/review-services.js";
+import logger from "../lib/logger.js";
 
 class ReviewController {
 
@@ -97,11 +98,12 @@ class ReviewController {
         try {
             const productId: string = req.params.id;
             const userId = req.user?.id || undefined;
-            console.debug(`\n Product id ==> ${productId}`);
-            console.debug(`\n User id ==> ${userId}`);
+            logger.debug(`Product id ==> ${productId}`);
+            logger.debug(`User id ==> ${userId}`);
 
             const reviews = await reviewServices.getReviewsByProduct(productId, userId);
-            console.debug(`\n reviews of product ==> ${reviews}`);
+            logger.debug('reviews of product ==>', reviews);
+
 
             return res.status(201).send({
                 success: true,
@@ -109,7 +111,7 @@ class ReviewController {
                 data: reviews
             })
         } catch (error) {
-            console.error("Error while getting product reviews ==> ", error);
+            logger.error("Error while getting product reviews ==> ", error);
             next(error);
             return;
         }

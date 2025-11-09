@@ -31,6 +31,7 @@ import { startCronBestSellerJob } from "./jobs/jobs.js"
 import { reviewRouter } from "./routes/review-routes.js"
 import { webhookRouter } from "./routes/webhook-route.js"
 import { frontend_router } from "./routes/frontend-routes.js"
+import logger from "./lib/logger.js"
 
 //Configurations
 const app = express()
@@ -102,5 +103,5 @@ connectDB()
 // this is only to test the pull request
 app.listen(PORT, () => {
     // startCronBestSellerJob();
-    console.log(`\nBackend server is started... \n PORT ==> ${PORT}`)
+    logger.debug(`\nBackend server is started... \n PORT ==> ${PORT}`)
 })
