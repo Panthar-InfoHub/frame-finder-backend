@@ -1,5 +1,6 @@
 import mongoose, { Model, startSession, Document, ClientSession } from 'mongoose';
 import AppError from '../middlwares/Error.js';
+import logger from '../lib/logger.js';
 
 interface IProduct extends Document {
     status: string;
@@ -32,6 +33,33 @@ export class ProductService<T extends IProduct> {
     // Update product except stock
     async update(id: string, updateData: any) {
 
+
+        if (updateData.variants && Array.isArray(updateData.variants)) {
+            const existingProduct: any = await this.model.findById(id).lean();
+
+            if (!existingProduct) {
+                logger.error(`Product not found with ID: ${id}`);
+                throw new AppError(`${this.modelName} not found`, 404);
+            }
+
+            if (existingProduct.variants && existingProduct.variants.length > 0) {
+                updateData.variants = updateData.variants.map((newVariant: any, index: number) => {
+                    const existingVariant = existingProduct.variants[index];
+
+                    if (existingVariant) {
+                        return {
+                            ...newVariant,
+                            stock: existingVariant.stock
+                        };
+                    }
+                    return newVariant;
+                });
+            }
+        }
+
+
+
+        logger.debug("Updating data: ", updateData);
         const product = await this.model.findByIdAndUpdate(id, { $set: updateData }, { new: true });
         if (!product) {
             throw new AppError(`${this.modelName} not found`, 404);

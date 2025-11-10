@@ -4,6 +4,7 @@ import { Product } from "../models/products.js";
 import { ProductService } from "../services/product-service.js";
 import { buildProductFilter } from "../lib/helper.js";
 import { ProductQuery } from "../lib/types.js";
+import logger from "../lib/logger.js";
 
 const productService = new ProductService(Product, "Product");
 
@@ -63,7 +64,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
             });
         }
 
-        console.debug("\n Updated data => ", updateData)
+        logger.debug("Updating data: ", updateData);
 
         const product = await productService.update(productId, updateData);
 

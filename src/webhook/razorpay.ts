@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
-import AppError from "../middlwares/Error.js";
+import logger from "../lib/logger.js";
 import { orderService } from "../services/order-service.js";
 
 
@@ -16,7 +16,7 @@ export const webHookHandler = async (req: Request, res: Response, next: NextFunc
         .digest("hex");
 
     if (signature !== expectedSignature) {
-        console.error("Invalid Razorpay Webhook Signature");
+        logger.error("Invalid Razorpay Webhook Signature");
         res.status(400).send("Invalid signature");
         return;
     }
@@ -32,9 +32,9 @@ export const webHookHandler = async (req: Request, res: Response, next: NextFunc
 
             const { order_ids, user_id } = orderEntity.notes;
 
-            console.debug(`Razorpay Order Paid Webhook received for Order IDs: ${order_ids} and User ID: ${user_id}`);
+            logger.debug(`Razorpay Order Paid Webhook received for Order IDs: ${order_ids} and User ID: ${user_id}`);
             if (!order_ids || !user_id) {
-                console.error('\n Missing orderIds or userId in webhook payload of notes');
+                logger.error('\n Missing orderIds or userId in webhook payload of notes');
                 return res.status(400).send('Invalid payload, notes missing order_ids or user_id');
             }
 
@@ -48,15 +48,8 @@ export const webHookHandler = async (req: Request, res: Response, next: NextFunc
         }
 
     } catch (error) {
-        console.error(`Error handling Razorpay event ${event}:`, error);
-
-        if (error instanceof Error && error.message === "SubscriptionNotFound") {
-            res.status(404).json({ message: "Subscription ID not found in database" });
-            return;
-        }
-        next(
-            new AppError("Error while handling subscription webhook", 500,),
-        );
+        logger.error(`Error handling Razorpay event ${event}:`, error);
+        next(error);
         return;
     }
 };
