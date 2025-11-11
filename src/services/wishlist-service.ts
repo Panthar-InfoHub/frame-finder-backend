@@ -171,7 +171,7 @@ class WishlistService {
                 price_breakdown.sub_total += item?.variant?.price?.total_price * item.quantity;
                 price_breakdown.shipping_price += item?.variant?.price?.shipping_price?.custom === true ? item.variant.price.shipping_price.value : 0;
             } else {
-                price_breakdown.sub_total += item?.price?.total_price * item.quantity;
+                price_breakdown.sub_total += item?.price?.base_price * item.quantity;
                 price_breakdown.shipping_price += item?.price?.shipping_price?.custom === true ? item.price.shipping_price.value : 0;
             }
             price_breakdown.lens_package_price += item?.lens_package_detail?.package_price * item.quantity || 0;
