@@ -121,7 +121,7 @@ class ReviewServices {
                         { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
                         {
                             $project: {
-                                content: 1,
+                                comment: 1,
                                 rating: 1,
                                 product: 1,
                                 user: { name: 1, email: 1, img: 1, _id: 1 },
@@ -146,7 +146,7 @@ class ReviewServices {
                         { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
                         {
                             $project: {
-                                content: 1,
+                                comment: 1,
                                 rating: 1,
                                 product: 1,
                                 user: { name: 1, email: 1, img: 1, _id: 1 },
