@@ -42,7 +42,7 @@ export const create_order_items = (wishListItems: any): OrderItem[] => {
         variantId: item?.variant?._id || null,
         vendorId: item.product.vendorId._id,
         productName: item.product.brand_name,
-        price: item?.variant?.price?.total_price || item.price.total_price,
+        price: item?.variant?.price?.shipping_price?.custom === true ? item.variant.price.shipping_price.value + item?.variant?.price?.total_price : item?.variant?.price?.total_price || item.price.total_price,
         quantity: item.quantity,
         prescription: item.prescription,
         lens_package_detail: item.lens_package_detail,

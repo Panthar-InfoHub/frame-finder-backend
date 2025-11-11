@@ -11,7 +11,7 @@ const productService = new ProductService(Product, "Product");
 
 export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const productData = req.body;
+        let productData = req.body;
 
         if (!productData || Object.keys(productData).length === 0) {
             console.warn("No product data provided");
@@ -25,6 +25,20 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
         }
 
         console.debug("\nProduct data received for creation ==> ", productData);
+
+        //Calculate price of product
+        if (productData.variants) {
+            productData.variants.forEach((variant: any) => {
+                variant.price = {
+                    base_price: variant.price.base_price,
+                    mrp: variant.price.mrp,
+                    shipping_price: variant.price.shipping_price,
+                    total_price: variant.price.shipping_price.custom === true ? variant.price.shipping_price.base_price : variant.price.base_price + variant.price.shipping_price.value
+                }
+            });
+        }
+
+        logger.debug("Product data after price calculation ==> ", productData);
 
         const product = await productService.create(productData);
 
