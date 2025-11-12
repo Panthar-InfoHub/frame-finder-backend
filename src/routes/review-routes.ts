@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { auth } from "../middlwares/auth.js";
 import { reviewController } from "../controllers/review-controller.js";
+import { optionalAuth } from "../middlwares/optionalAuth.js";
 
 export const reviewRouter = Router();
 
@@ -11,4 +12,4 @@ reviewRouter.delete("/:id", [auth], reviewController.delete_review);
 
 // === Get Data ===
 reviewRouter.get("/user/:id", reviewController.get_user_reviews);
-reviewRouter.get("/product/:id", [auth], reviewController.get_product_reviews);
+reviewRouter.get("/product/:id", [optionalAuth], reviewController.get_product_reviews);
