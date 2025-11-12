@@ -298,20 +298,21 @@ class OrderClass {
         const session = await mongoose.startSession();
         try {
             await session.withTransaction(async () => {
-                orders.map((order) => {
-                    order.items.map(async (item: OrderItem) => {
-                        const productModel = getModel(item.onModel);
-                        const product_service = new ProductService(productModel, item.onModel)
-                        await product_service.updateStock(item.productId, item.variantId, 'decrease', item.quantity, session);
-                        console.debug(`\n Stock reduced for ${item.productId} by ${item.quantity}`);
-                    })
-                })
+                await Promise.all(
+                    orders.flatMap(order =>
+                        order.items.map(async (item: OrderItem) => {
+                            const productModel = getModel(item.onModel);
+                            const product_service = new ProductService(productModel, item.onModel)
+                            await product_service.updateStock(item.productId, item.variantId, 'decrease', item.quantity, session);
+                            console.debug(`\n Stock reduced for ${item.productId} by ${item.quantity}`);
+                        })
+                    )
+                );
             })
         } catch (error) {
+            await session.endSession();
             console.error("\n Error in reduce stock ==> ", error);
             throw new AppError("Error in reduce stock", 500);
-        } finally {
-            await session.endSession();
         }
     }
 }
