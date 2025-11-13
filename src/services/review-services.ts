@@ -124,6 +124,7 @@ class ReviewServices {
                                 comment: 1,
                                 rating: 1,
                                 product: 1,
+                                images: 1,
                                 user: { name: 1, email: 1, img: 1, _id: 1 },
                                 createdAt: 1
                             }
@@ -149,6 +150,7 @@ class ReviewServices {
                                 comment: 1,
                                 rating: 1,
                                 product: 1,
+                                images: 1,
                                 user: { name: 1, email: 1, img: 1, _id: 1 },
                                 createdAt: 1
                             }
