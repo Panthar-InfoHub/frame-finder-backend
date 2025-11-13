@@ -4,6 +4,7 @@ import AppError from "../middlwares/Error.js";
 import { ContactLens } from "../models/contact-lens.js";
 import { Product } from "../models/products.js";
 import { Sunglass } from "../models/sunglass.js";
+import logger from "../lib/logger.js";
 
 const allProductModels = [Product, Sunglass, ContactLens];
 
@@ -109,6 +110,52 @@ class FrontendController {
             success: true
         });
 
+    }
+
+
+    async globalSuggestion(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { query } = req.query as { query: string };
+            const models = ['Sunglass', 'Product', 'ContactLens', 'ColorContactLens', 'Reader', 'Accessories'];
+
+            const searchPromises = models.map(async (type) => {
+                const Model = mongoose.model(type);
+
+                logger.debug(`Searching in model: ${Model.modelName} for query: "${query}"`);
+
+                //Using global text index for searching
+                return await Model.find(
+                    {
+                        $text: { $search: query },  // ← Uses "product_text_search" index
+                        status: 'active'
+                    },
+                    {
+                        score: { $meta: "textScore" } // Relevance score
+                    }
+                ).sort({ score: { $meta: "textScore" } }).limit(10).lean()
+                    .then(results => results.map(doc => ({
+                        ...doc,
+                        productType: type
+                    })));
+            });
+
+            logger.debug("Global suggestion search promises created ==> ", searchPromises);
+            const results = (await Promise.all(searchPromises)).flat();
+
+            logger.debug("Global suggestion results ==> ", results);
+
+            res.status(200).json({
+                success: true,
+                message: "Global suggestions fetched successfully",
+                data: results
+            });
+            return;
+
+        } catch (error) {
+            logger.error("Error in globalSuggestion:", error);
+            next(error);
+            return;
+        }
     }
 }
 

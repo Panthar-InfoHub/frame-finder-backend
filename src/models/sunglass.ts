@@ -69,9 +69,73 @@ sunglassSchema.add({
     }]
 })
 
+// ==========================================
+// Indexes for Sunglass
+
+// Pattern: find({ status: 'active' }).sort({ createdAt: -1 }).skip().limit()
+sunglassSchema.index({ status: 1, createdAt: -1 });
+
+// Pattern: find({ vendorId: id, status: 'active' }).sort({ createdAt: -1 })
+sunglassSchema.index({ vendorId: 1, status: 1, createdAt: -1 });
+
+// Pattern: findOneAndUpdate({ _id: id, "variants._id": variantId })
+sunglassSchema.index({ "variants._id": 1 });
+
+// Pattern: find({ $text: { $search: "query" } })
 sunglassSchema.index({
-    brand_name: 'text',
-    vendorId: 1
-})
+    brand_name: "text",
+    material: "text",
+    shape: "text",
+    style: "text"
+}, {
+    weights: {
+        brand_name: 10,
+        style: 5,
+        shape: 3,
+        material: 1
+    },
+    name: "sunglass_text_search"
+});
+
+// ==========================================
+// Future indexes for anticipated features
+
+// Index : Gender/Category filtering with pagination
+// Pattern: find({ gender: 'male', status: 'active' }).sort({ createdAt: -1 })
+sunglassSchema.index({
+    gender: 1,
+    status: 1,
+    createdAt: -1
+});
+
+// Index : "Top Rated" or "Best Sellers" feature
+// Pattern: find({ status: 'active' }).sort({ rating: -1, total_reviews: -1 })
+sunglassSchema.index({
+    status: 1,
+    rating: -1,
+    total_reviews: -1
+});
+
+// Index : Low stock alerts (inventory management)
+// Pattern: find({ "variants.stock.current": { $lte: minimum } })
+sunglassSchema.index({
+    "variants.stock.current": 1,
+    status: 1
+});
+
+// Index : Price-based search (if you add this feature)
+// Pattern: find({ status: 'active' }).sort({ "variants.price.total_price": 1 })
+sunglassSchema.index({
+    status: 1,
+    "variants.price.total_price": 1
+});
+
+// Index : Power filtering for sunglasses
+// Pattern: find({ is_Power: true, status: 'active' })
+sunglassSchema.index({
+    is_Power: 1,
+    status: 1
+});
+
 
 export const Sunglass = mongoose.model<ISunglass>("Sunglass", sunglassSchema);

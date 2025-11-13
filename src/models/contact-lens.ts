@@ -157,10 +157,78 @@ contactLensSchema.add({
     },
 })
 
+// ==========================================
+// Indexes for ContactLens
 
+// Pattern: find({ status: 'active' }).sort({ createdAt: -1 }).skip().limit()
+contactLensSchema.index({ status: 1, createdAt: -1 });
+
+// Pattern: find({ vendorId: id, status: 'active' }).sort({ createdAt: -1 })
+contactLensSchema.index({ vendorId: 1, status: 1, createdAt: -1 });
+
+// Pattern: findOneAndUpdate({ _id: id, "variants._id": variantId })
+contactLensSchema.index({ "variants._id": 1 });
+
+// Pattern: find({ $text: { $search: "query" } })
 contactLensSchema.index({
-    brand_name: 'text',
-    vendorId: 1
-})
+    brand_name: "text"
+}, {
+    weights: {
+        brand_name: 10
+    },
+    name: "contact_lens_text_search"
+});
+
+// Index : "Top Rated" or "Best Sellers" feature
+// Pattern: find({ status: 'active' }).sort({ rating: -1, total_reviews: -1 })
+contactLensSchema.index({
+    status: 1,
+    rating: -1,
+    total_reviews: -1
+});
+
+// Index : Low stock alerts (inventory management)
+// Pattern: find({ "variants.stock.current": { $lte: minimum } })
+contactLensSchema.index({
+    "variants.stock.current": 1,
+    status: 1
+});
+
+// Index : Price-based search
+// Pattern: find({ status: 'active' }).sort({ "variants.price.total_price": 1 })
+contactLensSchema.index({
+    status: 1,
+    "variants.price.total_price": 1
+});
+
+// Index : Lens type filtering
+// Pattern: find({ lens_type: 'toric', status: 'active' })
+contactLensSchema.index({
+    lens_type: 1,
+    status: 1
+});
+
+// Index : Disposability filtering
+// Pattern: find({ "variants.disposability": 'daily', status: 'active' })
+contactLensSchema.index({
+    "variants.disposability": 1,
+    status: 1
+});
+
+// Index : Expiry date monitoring
+// Pattern: find({ "variants.exp_date": { $lte: date } })
+contactLensSchema.index({
+    "variants.exp_date": 1,
+    status: 1
+});
+
+// Index : Size filtering
+// Pattern: find({ size: '14.0', status: 'active' })
+contactLensSchema.index({
+    size: 1,
+    status: 1
+});
+
+
 
 export const ContactLens = mongoose.model("ContactLens", contactLensSchema)
