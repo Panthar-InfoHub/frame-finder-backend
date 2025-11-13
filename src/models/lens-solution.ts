@@ -14,6 +14,7 @@ lensSolutionSchema.remove([
 ]);
 
 lensSolutionSchema.add({
+    type: { type: String, default: "LensSolution" },
     variants: [{
         sizes: {
             type: String,
@@ -68,5 +69,72 @@ lensSolutionSchema.add({
         },
     }],
 })
+
+// ==========================================
+// Indexes for LensSolution
+
+// Pattern: find({ status: 'active' }).sort({ createdAt: -1 }).skip().limit()
+lensSolutionSchema.index({ status: 1, createdAt: -1 });
+
+// Pattern: find({ vendorId: id, status: 'active' }).sort({ createdAt: -1 })
+lensSolutionSchema.index({ vendorId: 1, status: 1, createdAt: -1 });
+
+// Pattern: findOneAndUpdate({ _id: id, "variants._id": variantId })
+lensSolutionSchema.index({ "variants._id": 1 });
+
+// Pattern: find({ $text: { $search: "query" } })
+lensSolutionSchema.index({
+    brand_name: "text",
+    material: "text"
+}, {
+    weights: {
+        brand_name: 10,
+        material: 1
+    },
+    name: "lens_solution_text_search"
+});
+
+// Index : "Top Rated" or "Best Sellers" feature
+// Pattern: find({ status: 'active' }).sort({ rating: -1, total_reviews: -1 })
+lensSolutionSchema.index({
+    status: 1,
+    rating: -1,
+    total_reviews: -1
+});
+
+// Index : Low stock alerts (inventory management)
+// Pattern: find({ "variants.stock.current": { $lte: minimum } })
+lensSolutionSchema.index({
+    "variants.stock.current": 1,
+    status: 1
+});
+
+// Index : Price-based search
+// Pattern: find({ status: 'active' }).sort({ "variants.price.total_price": 1 })
+lensSolutionSchema.index({
+    status: 1,
+    "variants.price.total_price": 1
+});
+
+// Index : Size filtering (bottle sizes)
+// Pattern: find({ "variants.sizes": '100ml', status: 'active' })
+lensSolutionSchema.index({
+    "variants.sizes": 1,
+    status: 1
+});
+
+// Index : Expiry date monitoring
+// Pattern: find({ "variants.exp_date": { $lte: date } })
+lensSolutionSchema.index({
+    "variants.exp_date": 1,
+    status: 1
+});
+
+// Index : Lens material compatibility filtering
+// Pattern: find({ "variants.lens_material": 'silicone_hydrogel', status: 'active' })
+lensSolutionSchema.index({
+    "variants.lens_material": 1,
+    status: 1
+});
 
 export const LensSolution = mongoose.model("LensSolution", lensSolutionSchema);

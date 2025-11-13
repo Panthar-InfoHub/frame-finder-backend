@@ -110,9 +110,84 @@ colorContactLensSchema.add({
     },
 })
 
+// ==========================================
+// Indexes for ColorContactLens
+
+// Pattern: find({ status: 'active' }).sort({ createdAt: -1 }).skip().limit()
+colorContactLensSchema.index({ status: 1, createdAt: -1 });
+
+// Pattern: find({ vendorId: id, status: 'active' }).sort({ createdAt: -1 })
+colorContactLensSchema.index({ vendorId: 1, status: 1, createdAt: -1 });
+
+// Pattern: findOneAndUpdate({ _id: id, "variants._id": variantId })
+colorContactLensSchema.index({ "variants._id": 1 });
+
+// Pattern: find({ $text: { $search: "query" } })
 colorContactLensSchema.index({
-    brand_name: 'text',
-    vendorId: 1
-})
+    brand_name: "text"
+}, {
+    weights: {
+        brand_name: 10
+    },
+    name: "color_contact_lens_text_search"
+});
+
+// Index : "Top Rated" or "Best Sellers" feature
+// Pattern: find({ status: 'active' }).sort({ rating: -1, total_reviews: -1 })
+colorContactLensSchema.index({
+    status: 1,
+    rating: -1,
+    total_reviews: -1
+});
+
+// Index : Low stock alerts (inventory management)
+// Pattern: find({ "variants.stock.current": { $lte: minimum } })
+colorContactLensSchema.index({
+    "variants.stock.current": 1,
+    status: 1
+});
+
+// Index : Price-based search
+// Pattern: find({ status: 'active' }).sort({ "variants.price.total_price": 1 })
+colorContactLensSchema.index({
+    status: 1,
+    "variants.price.total_price": 1
+});
+
+// Index : Lens type filtering (zero_power vs power)
+// Pattern: find({ lens_type: 'zero_power', status: 'active' })
+colorContactLensSchema.index({
+    lens_type: 1,
+    status: 1
+});
+
+// Index : Disposability filtering
+// Pattern: find({ "variants.disposability": 'daily', status: 'active' })
+colorContactLensSchema.index({
+    "variants.disposability": 1,
+    status: 1
+});
+
+// Index : Color filtering
+// Pattern: find({ "variants.color": 'Blue', status: 'active' })
+colorContactLensSchema.index({
+    "variants.color": 1,
+    status: 1
+});
+
+// Index : Expiry date monitoring
+// Pattern: find({ "variants.exp_date": { $lte: date } })
+colorContactLensSchema.index({
+    "variants.exp_date": 1,
+    status: 1
+});
+
+// Index : Size filtering
+// Pattern: find({ size: '14.0', status: 'active' })
+colorContactLensSchema.index({
+    size: 1,
+    status: 1
+});
+
 
 export const ColorContactLens = mongoose.model("ColorContactLens", colorContactLensSchema)
