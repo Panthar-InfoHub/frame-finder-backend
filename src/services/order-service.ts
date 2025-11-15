@@ -130,7 +130,7 @@ class OrderClass {
         const userId = new mongoose.Types.ObjectId(user);
 
         const [orders, total] = await Promise.all([
-            Order.find({ userId })
+            Order.find({ userId, order_status: { $ne: 'pending' } })
                 .sort({ createdAt: -1 })
                 .limit(Number(limit))
                 .skip((Number(page) - 1) * Number(limit))
