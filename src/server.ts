@@ -31,6 +31,7 @@ import { vendorMiscRouter } from "./routes/vendor-misc-routes.js"
 import { vendorRouter } from "./routes/vendor-routes.js"
 import { webhookRouter } from "./routes/webhook-route.js"
 import { wishlistRouter } from "./routes/wishlist-routes.js"
+import { user_wishlistRouter } from "./routes/user_wishlist-routes.js"
 
 //Configurations
 const app = express()
@@ -54,7 +55,8 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/frontend", frontend_router);
 app.use("/api/v1/vendor", vendorRouter);
-app.use("/api/v1/wishlist", wishlistRouter);
+app.use("/api/v1/cart", wishlistRouter);
+app.use("/api/v1/wishlist", user_wishlistRouter);
 app.use("/api/v1/vendor-misc", vendorMiscRouter);
 
 //Order Routes
