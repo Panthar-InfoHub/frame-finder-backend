@@ -1,4 +1,4 @@
-// This model represents a user's cart but name is wishlist.
+// This file defines the Wishlist model for Frame finder
 import mongoose from "mongoose";
 
 const itemSchema = new mongoose.Schema({
@@ -15,36 +15,19 @@ const itemSchema = new mongoose.Schema({
             message: '{VALUE} is not a valid type'
         },
     },
-
     variant: {
         type: mongoose.Schema.Types.ObjectId,
     },
-    quantity: {
-        type: Number,
-        default: 1
-    },
-    prescription: {
-        type: mongoose.Schema.Types.Mixed
-    },
-    lens_package_detail: {
-        package_type: { type: String },
-        package_design: { type: String },
-        package_price: { type: Number }
-    }
 
 }, { timestamps: true })
 
-const wishListSchema = new mongoose.Schema({
+const user_wishlist_schema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: [true, "User ID is required"]
     },
     items: [itemSchema],
-
-    subTotal: {
-        type: Number,
-    }
 }, { timestamps: true });
 
-export const WishList = mongoose.model("WishList", wishListSchema);
+export const UserWishlist = mongoose.model("user_wishlist", user_wishlist_schema);
