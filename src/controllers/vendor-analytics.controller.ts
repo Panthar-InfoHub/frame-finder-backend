@@ -8,6 +8,7 @@ import { getStartDate, months } from "../lib/uitils.js";
 import mongoose from "mongoose";
 import { ColorContactLens } from "../models/color-contact-lens.js";
 import { Reader } from "../models/reader.js";
+import logger from "../lib/logger.js";
 
 export const getVendorProductCounts = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -221,33 +222,36 @@ export async function getVendorMetrics(req: Request, res: Response, next: NextFu
             }
         ]);
 
-        console.debug("\n Final result of metrics analytics ==> ", stats[0])
+        logger.debug("\n Final result of metrics analytics ==> ", stats)
 
         if (!stats.length) {
-            return {
-                totalSales: 0,
-                totalOrders: 0,
-                pendingOrders: 0,
-                totalItemsSold: 0
-            };
+            return res.status(200).send({
+                success: true,
+                message: "Metrics fetched successfully",
+                data: {
+                    total_sales: 0,
+                    total_orders: 0,
+                    total_items_sold: 0,
+                    pending_orders: 0,
+                }
+            })
         }
 
         const metric = stats[0];
-        {
-
-        }
 
         return res.status(200).send({
             success: true,
             message: "Metrics fetched successfully",
             data: {
-                total_sales: metric.totalSales,
-                total_orders: metric.totalOrders,
-                total_items_sold: metric.totalItemsSold,
-                pending_orders: metric.pendingOrders,
+                total_sales: metric?.totalSales || 0,
+                total_orders: metric?.totalOrders || 0,
+                total_items_sold: metric?.totalItemsSold || 0,
+                pending_orders: metric?.pendingOrders || 0,
             }
         })
     } catch (error) {
-
+        logger.error("Error while getting vendor metrics ==> ", error);
+        next(error);
+        return
     }
 }
