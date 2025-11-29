@@ -102,7 +102,21 @@ const PORT = process.env.PORT || 8080
 
 connectDB()
 // this is only to test the pull request
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     // startCronBestSellerJob();
     logger.debug(`\nBackend server is started... \n PORT ==> ${PORT}`)
 })
+
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received. Shutting down gracefully...');
+    server.close(() => {
+        console.log('Process terminated');
+    });
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received. Shutting down gracefully...');
+    server.close(() => {
+        console.log('Process terminated');
+    });
+});
