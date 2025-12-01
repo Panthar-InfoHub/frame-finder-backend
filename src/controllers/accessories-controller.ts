@@ -219,7 +219,7 @@ export const getAccessorieByID = async (req: Request, res: Response, next: NextF
 
         const accessories = await Accessories
             .findById(AccessoriesId)
-            .populate("vendorId", "business_name email phone")
+            .populate("vendorId", "business_name email phone rating total_reviews year_of_experience")
 
         if (!accessories || accessories.status === 'inactive') {
             console.warn(`Accessories with ID ${AccessoriesId} not found`);
