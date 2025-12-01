@@ -3,6 +3,8 @@ import AppError from "../middlwares/Error.js";
 import { Model } from "mongoose";
 import { ContactLensService } from "../services/contact-lens-service.js";
 import { ProductService } from "../services/product-service.js";
+import { buildProductFilter } from "../lib/helper.js";
+import { ProductQuery } from "../lib/types.js";
 
 
 export class LensController {
@@ -172,29 +174,9 @@ export class LensController {
             const page = parseInt(req.params.page as string) || 1;
             const limit = parseInt(req.params.limit as string) || 100;
             const skip = (page - 1) * limit;
-            const vendorId = req.query.vendorId as string;
+            const filter = buildProductFilter(req.query as ProductQuery);
 
-            const search = req.query.search as string || "";
-
-            console.debug("\nSearch query: ", search);
-
-            let filter: any = { status: 'active' };
-
-            if (search) {
-                const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-
-                filter = {
-                    ...filter,
-                    $or: [
-                        { productCode: { $regex: escapedSearch, $options: 'i' } },
-                        { $text: { $search: search } }
-                    ]
-                };
-            }
-
-            if (vendorId) {
-                filter.vendorId = vendorId;
-            }
+            console.debug("Filter for products: ", filter);
 
             console.debug("Filter for Contact Lens: ", filter);
 

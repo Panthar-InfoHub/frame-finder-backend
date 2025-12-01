@@ -1,3 +1,4 @@
+import logger from "./logger.js";
 import { OrderItem, ProductQuery } from "./types.js";
 
 export const generatePassword = (type: string): string => {
@@ -120,6 +121,8 @@ export function getDateRange(periodName: string): { start: Date | null; end: Dat
 
 
 export function buildProductFilter(query: ProductQuery) {
+
+    logger.debug("Building product filter with query: ", query);
     let filter: any = { status: 'active' };
 
     // Search logic
@@ -140,7 +143,11 @@ export function buildProductFilter(query: ProductQuery) {
 
     const addInFilter = (key: string, dbField: string, target: any = filter) => {
         if (query[key as keyof ProductQuery]) {
-            const arr = (query[key as keyof ProductQuery] as string).split(',').map(s => s.trim());
+            logger.info(`Processing filter for ${key} with value: `, query[key as keyof ProductQuery]);
+            const arr = Array.isArray(query[key as keyof ProductQuery])
+                ? (query[key as keyof ProductQuery] as string[])
+                : [query[key as keyof ProductQuery] as string];
+            logger.debug(`Adding IN filter for ${dbField} with values: `, arr);
             target[dbField] = { $in: arr };
         }
     };
@@ -152,6 +159,11 @@ export function buildProductFilter(query: ProductQuery) {
     addInFilter('frame_color', 'variants.frame_color');
     addInFilter('temple_color', 'variants.temple_color');
     addInFilter('lens_color', 'variants.lens_color');
+    addInFilter('disposability', 'variants.disposability');
+    addInFilter('lens_per_box', 'variants.pieces_per_box');
+    addInFilter('color', 'variants.color');
+    addInFilter('type', 'lens_type');
+    logger.debug("Constructed filter: ", filter);
 
     return filter;
 }
