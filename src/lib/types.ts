@@ -41,12 +41,18 @@ export interface CouponBreakdown {
 
 export type ProductQuery = {
     vendorId?: string;
-    material?: string;
-    shape?: string;
-    style?: string;
+    material?: string | string[];
+    shape?: string | string[];
+    style?: string | string[];
     search?: string;
-    gender?: string;
-    frame_color?: string;
+    gender?: string | string[];
+    frame_color?: string | string[]; 
+    size?: string | string[];
     temple_color?: string;
     lens_color?: string;
+    //Contact lens specific filters :
+    disposability?: string | string[];
+    type ?: string | string[];
+    lens_per_box?: number | number[]; 
+    color?: string | string[];
 };

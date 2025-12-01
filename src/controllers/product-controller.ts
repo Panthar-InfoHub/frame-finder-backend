@@ -145,7 +145,7 @@ export const getAllProducts = async (req: Request, res: Response, next: NextFunc
         console.debug("Filter for products: ", filter);
 
         const result = await productService.getAll({ filter, skip, limit });
-        console.debug("\nResult: ", result);
+        // console.debug("\nResult: ", result);
 
         res.status(200).send({
             success: true,
