@@ -163,6 +163,7 @@ export function buildProductFilter(query: ProductQuery) {
     addInFilter('lens_per_box', 'variants.pieces_per_box');
     addInFilter('color', 'variants.color');
     addInFilter('type', 'lens_type');
+    addInFilter('is_Power', 'is_Power');
     logger.debug("Constructed filter: ", filter);
 
     return filter;

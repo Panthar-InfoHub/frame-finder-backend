@@ -55,4 +55,5 @@ export type ProductQuery = {
     type ?: string | string[];
     lens_per_box?: number | number[]; 
     color?: string | string[];
+    is_Power?: boolean;
 };
