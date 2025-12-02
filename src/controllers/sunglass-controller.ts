@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import AppError from "../middlwares/Error.js";
 import { Sunglass } from "../models/sunglass.js";
 import { ProductService } from "../services/product-service.js";
+import { buildProductFilter } from "../lib/helper.js";
+import { ProductQuery } from "../lib/types.js";
 
 const sunglassService = new ProductService(Sunglass, "Sunglass");
 
@@ -133,25 +135,9 @@ export const getAllSunglass = async (req: Request, res: Response, next: NextFunc
         console.debug("\nSearch query: ", search);
         console.debug("\nVendor ID: ", vendorId);
 
-        let filter: any = { status: 'active' };
+        const filter = buildProductFilter(req.query as ProductQuery);
 
-        if (search) {
-            const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-
-            filter = {
-                ...filter,
-                $or: [
-                    { productCode: { $regex: escapedSearch, $options: 'i' } },
-                    { $text: { $search: search } }
-                ]
-            };
-        }
-
-        if (vendorId) {
-            filter.vendorId = vendorId;
-        }
-
-        console.debug("Filter for sunglass: ", filter);
+        console.debug("Filter for products: ", filter);
 
         const result = await sunglassService.getAll({ filter, skip, limit });
         console.debug("\nResult: ", result);
