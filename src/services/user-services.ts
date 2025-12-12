@@ -17,6 +17,7 @@ export interface userData {
         pincode?: string;
     };
     isActive?: boolean;
+    fcm_token?: string;
 }
 
 class UserClass {

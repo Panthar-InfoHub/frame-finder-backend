@@ -58,12 +58,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "USER"
     },
-    //Fcm token ==> for future notification in app
-    // fcm_token: {
-    //     type: String,
-    //     trim: true,
-    //     select: false
-    // }
+    fcm_token: {
+        type: String,
+        trim: true,
+    }
 }, { timestamps: true })
 
 userSchema.pre('validate', async function (next): Promise<void> {

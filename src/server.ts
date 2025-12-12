@@ -32,6 +32,7 @@ import { vendorRouter } from "./routes/vendor-routes.js"
 import { webhookRouter } from "./routes/webhook-route.js"
 import { wishlistRouter } from "./routes/wishlist-routes.js"
 import { user_wishlistRouter } from "./routes/user_wishlist-routes.js"
+import { marketingRouter } from "./routes/marketing-routes.js"
 
 //Configurations
 const app = express()
@@ -49,6 +50,7 @@ if (process.env.ENVIROMENT === "dev") {
 
 //API ROUTES 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/marketing-form", marketingRouter);
 app.use("/api/v1/misc", miscRouter);
 app.use("/api/v1/data", dataRouter);
 app.use("/api/v1/user", userRouter);
