@@ -41,6 +41,7 @@ const marketingFormSchema = new Schema({
                 type: [Date],
                 validate: {
                     validator: function (this: any, dates: Date[]) {
+                        if (!dates || dates.length === 0) return true;
                         if (!this.total_campaign_day) return true;
                         return dates.length === this.total_campaign_day;
                     },
@@ -54,7 +55,7 @@ const marketingFormSchema = new Schema({
 
             product_id: {
                 type: Schema.Types.ObjectId,
-                refPath: 'onModel'
+                refPath: 'request.onModel'
             },
 
             onModel: {

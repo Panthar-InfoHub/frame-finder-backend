@@ -4,7 +4,8 @@ import { createMarketingFormService, getMarketingFormByIdService, searchMarketin
 export const createMarketingForm = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const body = req.body;
-        const marketingForm = await createMarketingFormService(body);
+        const vendor_id = req.user?.id;
+        const marketingForm = await createMarketingFormService({ ...body, vendor_id });
         console.debug("Marketing form created ==> ", marketingForm);
 
         res.status(201).json({
