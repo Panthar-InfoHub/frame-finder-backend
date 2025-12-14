@@ -28,6 +28,7 @@ export const searchMarketingFormsService = async (query: any, page: number, limi
     const [marketing_form, total_marketing_form] = await Promise.all([
         MarketingForm
             .find(query)
+            .sort({ createdAt: -1 })
             .populate('vendor_id', 'business_name company_pan business_owner email phone')
             .populate('request.product_id', 'brand_name variants')
             .skip(skip)

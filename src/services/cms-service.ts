@@ -30,6 +30,7 @@ export const searchCMSEntries = async (query: any, page: number, limit: number) 
     const [cms_entries, total_cms_entries] = await Promise.all([
         CMS
             .find(query)
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
             .lean(),
