@@ -262,3 +262,88 @@ export const verifyOtp = async (req: Request, res: Response, next: NextFunction)
         return;
     }
 }
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user_id = req.user?.id;
+        const { old_password: password, new_password, type } = req.body;
+
+        if (!password || !type || !new_password) {
+            console.warn("password and type are required.");
+            return res.status(400).send({
+                success: false,
+                message: "password and type are required."
+            });
+        }
+
+
+        let user: any = null;
+
+        if (type === "ADMIN" || type === "SUPER_ADMIN") {
+            user = await Admin.findById(user_id);
+
+            const isPasswordCorrect = await user.comparePassword(password);
+
+            if (!isPasswordCorrect) {
+                console.warn("\nInvalid password, check your credentials...");
+                return res.status(401).send({
+                    success: false,
+                    message: "Invalid password, check your credentials..."
+                });
+            }
+        }
+
+        if (type === "VENDOR") {
+            user = await Vendor.findById(user_id).select("+password");
+
+            console.debug("Vendor lookup result ==> ", user);
+
+            const isPasswordCorrect = await user.comparePassword(password);
+
+            if (!isPasswordCorrect) {
+                console.warn("\nInvalid password, check your credentials...");
+                return res.status(401).send({
+                    success: false,
+                    message: "Invalid password, check your credentials..."
+                });
+            }
+        }
+
+        if (type === "USER") {
+            user = await User.findById(user_id).select("+password");
+
+            console.debug("User lookup result ==> ", user);
+
+            let isPasswordCorrect = false;
+            if (password) {
+                isPasswordCorrect = await user.comparePassword(password);
+                if (!isPasswordCorrect) {
+                    console.warn("\nInvalid password, check your credentials...");
+                    return res.status(401).send({
+                        success: false,
+                        message: "Invalid password, check your credentials..."
+                    });
+                }
+            }
+        }
+
+
+        if (!user) {
+            console.warn("User not found.");
+            return res.status(404).send({
+                success: false,
+                message: "User not found."
+            });
+        }
+        user.password = new_password;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Password reset successful"
+        });
+        return;
+    } catch (error) {
+
+    }
+}

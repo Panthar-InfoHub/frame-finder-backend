@@ -182,6 +182,7 @@ const vendorSchema = new mongoose.Schema<IVendor, vendorSchemaType>({
 
 vendorSchema.pre('validate', async function (next) {
     console.debug("in vendor validate....")
+    if (!this.isModified('password')) return next();
 
 
     if (this.isModified('password') && this.password) {

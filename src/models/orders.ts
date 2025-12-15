@@ -5,7 +5,7 @@ const orderItemSchema = new mongoose.Schema({
     productId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        refPath: 'onModel'
+        refPath: 'items.onModel'
     },
     onModel: {
         type: String,
@@ -64,7 +64,7 @@ const orderSchema = new mongoose.Schema({
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Users',
+        ref: 'User',
         required: true
     },
     user_snapshot: {
@@ -87,7 +87,7 @@ const orderSchema = new mongoose.Schema({
     },
     order_status: {
         type: String,
-        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+        enum: ['pending', 'processing', 'ready_to_ship', 'shipped', 'delivered', 'cancelled'],
         default: 'pending',
     },
     tracking_id: {

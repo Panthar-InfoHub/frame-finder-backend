@@ -8,7 +8,7 @@ export const addValues = async (req: Request, res: Response, next: NextFunction)
     await session.startTransaction()
     try {
 
-        const { type, values } = req.body
+        const { type, values, miscellaneous } = req.body
 
         console.debug("\n Requested data to add or create ==> ", req.body)
         if (!type) {
@@ -19,9 +19,17 @@ export const addValues = async (req: Request, res: Response, next: NextFunction)
             })
         }
 
+        let query: any = {}
+        if (miscellaneous) {
+            query.$set = { miscellaneous };
+        }
+        if (values && Array.isArray(values)) {
+            query.$addToSet = { values: { $each: values } }
+        }
+
         const misc = await Miscellaneous.findOneAndUpdate(
             { type },
-            { $addToSet: { values: { $each: values } } },
+            query,
             { new: true, upsert: true, session }
         )
 
@@ -37,7 +45,7 @@ export const addValues = async (req: Request, res: Response, next: NextFunction)
         return;
 
     } catch (error) {
-        console.error("Error while add values or creating miscellaneous document")
+        console.error("Error while add values or creating miscellaneous document ==> ", error)
         await session.abortTransaction()
         next(error);
         return;

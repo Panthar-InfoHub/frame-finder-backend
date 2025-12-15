@@ -2,45 +2,29 @@ import cookieParser from "cookie-parser"
 import * as cors from "cors"
 import dotenv from "dotenv"
 import express from "express"
+import http from "http"
 import morgan from "morgan"
+import { Server } from "socket.io"
+import { registerRoutes } from "./index.routes.js"
 import { connectDB } from "./lib/ConnectDB.js"
 import logger from "./lib/logger.js"
 import AppError from "./middlwares/Error.js"
 import { errorHandler } from "./middlwares/ErrorMiddleware.js"
-import { accessoriesRouter } from "./routes/accessories-route.js"
-import { adminRoutes } from "./routes/admin-routes.js"
-import { authRouter } from "./routes/auth-routes.js"
-import { bestSellerRouter } from "./routes/best-seller-routes.js"
-import { clrContactLensRouter } from "./routes/color-contact-lens-route.js"
-import { contactLensRouter } from "./routes/contact-lens-route.js"
-import { couponRouter } from "./routes/coupon-routes.js"
-import { dataRouter } from "./routes/data-routes.js"
-import { frontend_router } from "./routes/frontend-routes.js"
-import { lensPackageRouter } from "./routes/lens-package-routes.js"
-import { lensSolutionRouter } from "./routes/lens-solution-route.js"
-import { miscRouter } from "./routes/misc-routes.js"
-import { orderRouter } from "./routes/order-routes.js"
-import { productRouter } from "./routes/product-routes.js"
-import { readerRouter } from "./routes/reader-route.js"
-import { reviewRouter } from "./routes/review-routes.js"
-import { sunglassLensPackageRouter } from "./routes/sunglass-package-routes.js"
-import { sunglassRouter } from "./routes/sunglass-routes.js"
-import { userRouter } from "./routes/user-routes.js"
-import { vendorAnalyticRouter } from "./routes/vendor-analytics-route.js"
-import { vendorMiscRouter } from "./routes/vendor-misc-routes.js"
-import { vendorRouter } from "./routes/vendor-routes.js"
-import { webhookRouter } from "./routes/webhook-route.js"
-import { wishlistRouter } from "./routes/wishlist-routes.js"
-import { user_wishlistRouter } from "./routes/user_wishlist-routes.js"
+
 
 //Configurations
 const app = express()
 dotenv.config()
+//Setting up socket server
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: { origin: "*" },
+});
 
 //Middlewares
-
 app.use(cors.default())
 app.use(express.json());
+app.set("io", io)
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 if (process.env.ENVIROMENT === "dev") {
@@ -48,39 +32,7 @@ if (process.env.ENVIROMENT === "dev") {
 }
 
 //API ROUTES 
-app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/misc", miscRouter);
-app.use("/api/v1/data", dataRouter);
-app.use("/api/v1/user", userRouter);
-app.use("/api/v1/admin", adminRoutes);
-app.use("/api/v1/frontend", frontend_router);
-app.use("/api/v1/vendor", vendorRouter);
-app.use("/api/v1/cart", wishlistRouter);
-app.use("/api/v1/wishlist", user_wishlistRouter);
-app.use("/api/v1/vendor-misc", vendorMiscRouter);
-
-//Order Routes
-app.use("/api/v1/coupon", couponRouter);
-app.use("/api/v1/order", orderRouter);
-app.use("/api/v1/review", reviewRouter);
-
-//Products Api Routes
-app.use("/api/v1/products", productRouter);
-app.use("/api/v1/sunglass", sunglassRouter);
-app.use("/api/v1/reader", readerRouter);
-app.use("/api/v1/contact-lens", contactLensRouter);
-app.use("/api/v1/accessories", accessoriesRouter);
-app.use("/api/v1/lens-package", lensPackageRouter);
-app.use("/api/v1/lens-solution", lensSolutionRouter);
-app.use("/api/v1/color-contact-lens", clrContactLensRouter);
-app.use("/api/v1/sun-lens-package", sunglassLensPackageRouter);
-
-//Analytics
-app.use("/api/v1/vendor-analytics", vendorAnalyticRouter);
-app.use("/api/v1/best-seller", bestSellerRouter);
-
-//Webhook Routes
-app.use("/api/v1/webhhok", webhookRouter)
+registerRoutes(app);
 
 
 
@@ -100,23 +52,23 @@ app.use(errorHandler)
 const PORT = process.env.PORT || 8080
 
 
+
 connectDB()
-// this is only to test the pull request
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
     // startCronBestSellerJob();
     logger.debug(`\nBackend server is started... \n PORT ==> ${PORT}`)
 })
 
 process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Shutting down gracefully...');
+    logger.warn('SIGTERM received. Shutting down gracefully...');
     server.close(() => {
-        console.log('Process terminated');
+        logger.info('Process terminated');
     });
 });
 
 process.on('SIGINT', () => {
-    console.log('SIGINT received. Shutting down gracefully...');
+    logger.warn('SIGINT received. Shutting down gracefully...');
     server.close(() => {
-        console.log('Process terminated');
+        logger.info('Process terminated');
     });
 });
