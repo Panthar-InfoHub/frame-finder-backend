@@ -5,7 +5,7 @@ import { Order } from "../models/orders.js";
 import { userService } from "./user-services.js";
 import { create_order_items, discount_price, get_item_by_vendor } from "../lib/helper.js";
 import { couponService } from "./coupon-services.js";
-import { OrderItem } from "../lib/types.js";
+import { OrderItem, PopulatedOrderItem } from "../lib/types.js";
 import { Payment } from "../models/payment.js";
 import { ProductService } from "./product-service.js";
 import { getModel } from "../lib/uitils.js";
@@ -167,7 +167,7 @@ class OrderClass {
     }
 
     // Updated order : Status , tracking id's and Payment attempt
-    async updateOrderStatus(orderId: string, statusData: any) {
+    async updateOrderStatus(orderId: string, statusData: any): Promise<PopulatedOrderItem> {
         const { order_status, tracking_id, paymentAttemptId } = statusData;
 
         const updateFields: any = {};
@@ -182,7 +182,10 @@ class OrderClass {
             orderId,
             { $set: updateFields },
             { new: true, runValidators: true }
-        );
+        )
+            .populate('userId', 'first_name last_name email phone')
+            .populate('items.productId')
+            .lean<PopulatedOrderItem>();
 
         if (!updatedOrder) {
             throw new AppError("Order not found...", 404);
