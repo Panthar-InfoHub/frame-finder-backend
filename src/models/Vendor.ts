@@ -182,19 +182,21 @@ const vendorSchema = new mongoose.Schema<IVendor, vendorSchemaType>({
 
 vendorSchema.pre('validate', async function (next) {
     console.debug("in vendor validate....")
-    if (!this.isModified('password')) return next();
-
-
-    if (this.isModified('password') && this.password) {
-        console.debug("Password has been modified, hashing now...");
-        try {
-            const salt = await bcrypt.genSalt(12);
-            this.password = await bcrypt.hash(this.password, salt);
-        } catch (error: any) {
-            return next(error);
-        }
+    if (!this.isNew && !this.isModified('password')) {
+        return next();
     }
-    next();
+
+    if (!this.password) {
+        return next();
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(12);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error: any) {
+        next(error);
+    }
 });
 
 vendorSchema.methods.comparePassword = async function (password: string) {

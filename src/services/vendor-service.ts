@@ -26,6 +26,10 @@ class VendorClass {
             token
         }
     }
+
+    async searchVendorByPhone(phone: string) {
+        return await Vendor.findOne({ phone, isActive: true }).select("-password -phoneVerification");
+    }
 }
 
 export const VendorService = new VendorClass();
