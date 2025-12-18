@@ -1,50 +1,31 @@
 import { PopulatedOrderItem } from "./types.js"
 
-interface OrderItem {
-    productName: string
-    price: number
-    quantity: number
-    product_snapshot: {
-        productCode: string
-        brand_name?: string
-        variant_details?: {
-            frame_color?: string
-            temple_color?: string
-            image_url?: string
-        }
-    }
-    vendor_snapshot: {
-        business_name: string
-        business_owner: string
-    }
-}
-
 interface OrderUpdateProps {
-    data: PopulatedOrderItem
-    trackingId?: string
+  data: PopulatedOrderItem
+  trackingId?: string
 }
 
 const getStatusConfig = (status: string) => {
-    const configs: Record<string, { label: string; color: string; icon: string }> = {
-        pending: { label: "Pending", color: "#FFA500", icon: "⏳" },
-        processing: { label: "Processing", color: "#4169E1", icon: "⚙️" },
-        shipped: { label: "Shipped", color: "#00aa78", icon: "🚚" },
-        delivered: { label: "Delivered", color: "#00aa78", icon: "✓" },
-        cancelled: { label: "Cancelled", color: "#DC3545", icon: "✕" },
-    }
-    return configs[status] || configs["pending"]
+  const configs: Record<string, { label: string; color: string; icon: string }> = {
+    pending: { label: "Pending", color: "#FFA500", icon: "⏳" },
+    processing: { label: "Processing", color: "#4169E1", icon: "⚙️" },
+    shipped: { label: "Shipped", color: "#00aa78", icon: "🚚" },
+    delivered: { label: "Delivered", color: "#00aa78", icon: "✓" },
+    cancelled: { label: "Cancelled", color: "#DC3545", icon: "✕" },
+  }
+  return configs[status] || configs["pending"]
 }
 
 export const OrderUpdateEmailTemplate = (props: OrderUpdateProps) => {
-    const { data } = props
-    const statusConfig = getStatusConfig(data.order_status)
+  const { data } = props
+  const statusConfig = getStatusConfig(data.order_status)
 
-    const vendorDetails = data.items[0]?.vendor_snapshot || {
-        business_name: "N/A",
-        business_owner: "N/A",
-    }
+  const vendorDetails = data.items[0]?.vendor_snapshot || {
+    business_name: "N/A",
+    business_owner: "N/A",
+  }
 
-    const htmlBody = `
+  const htmlBody = `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -293,8 +274,8 @@ export const OrderUpdateEmailTemplate = (props: OrderUpdateProps) => {
             <div class="section">
               <div class="section-title">Order Items</div>
               ${data.items
-            .map(
-                (item) => `
+      .map(
+        (item) => `
                 <div class="item-card">
                   <div class="item-header">
                     <div>
@@ -303,13 +284,13 @@ export const OrderUpdateEmailTemplate = (props: OrderUpdateProps) => {
                     </div>
                   </div>
                   ${item.product_snapshot.variant_details?.image_url
-                        ? `
+            ? `
                     <div class="item-image">
                       <img src="${item.product_snapshot.variant_details.image_url}" alt="${item.productName}" />
                     </div>
                   `
-                        : ""
-                    }
+            : ""
+          }
                   <div class="item-body">
                     ${item.product_snapshot.brand_name ? `<div class="variant-detail"><strong>Brand:</strong> ${item.product_snapshot.brand_name}</div>` : ""}
                     ${item.product_snapshot.variant_details?.frame_color ? `<div class="variant-detail"><strong>Frame Color:</strong> ${item.product_snapshot.variant_details.frame_color}</div>` : ""}
@@ -329,20 +310,20 @@ export const OrderUpdateEmailTemplate = (props: OrderUpdateProps) => {
                   </div>
                 </div>
               `,
-            )
-            .join("")}
+      )
+      .join("")}
             </div>
 
             ${props.trackingId
-            ? `
+      ? `
               <div class="section">
                 <div class="tracking-box">
                   <strong>Tracking ID:</strong> ${props.trackingId}
                 </div>
               </div>
             `
-            : ""
-        }
+      : ""
+    }
 
             <div class="price-section">
               <div class="price-row">
@@ -368,5 +349,217 @@ export const OrderUpdateEmailTemplate = (props: OrderUpdateProps) => {
     </html>
   `
 
-    return htmlBody
+  return htmlBody
+}
+
+export const adminBody = ({ vendor }: any) => {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      border-top: 6px solid #00aa78;
+    }
+    .header {
+      background-color: #00aa78;
+      color: #ffffff;
+      padding: 22px 30px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .content {
+      padding: 30px;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #00aa78;
+      margin-bottom: 8px;
+    }
+    p {
+      margin: 6px 0;
+      font-size: 14px;
+    }
+    .highlight-box {
+      background-color: #f1fdf8;
+      border-left: 4px solid #00aa78;
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      padding: 20px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">New Vendor Onboarding — FrameFinder</div>
+
+    <div class="content">
+      <div class="section">
+        <div class="section-title">Business Overview</div>
+        <p><strong>Brand Name:</strong> ${vendor.business_name || "-"}</p>
+        <p><strong>Firm Name:</strong> ${vendor.firm_name || "-"}</p>
+        <p><strong>Owner:</strong> ${vendor.business_owner || "-"}</p>
+        <p><strong>Experience:</strong> ${vendor.year_of_experience || 0} years</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Contact Details</div>
+        <p><strong>Phone:</strong> ${vendor.phone}</p>
+        <p><strong>Email:</strong> ${vendor.email || "-"}</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Compliance</div>
+        <p><strong>GST Number:</strong> ${vendor.gst_number || "Not Provided"}</p>
+        <p><strong>Company PAN:</strong> ${vendor.company_pan || "Not Provided"}</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Business Location</div>
+        <p>
+          ${vendor.address?.city || "-"}, 
+          ${vendor.address?.state || "-"} — 
+          ${vendor.address?.pincode || "-"}
+        </p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Product Categories</div>
+        <p>${vendor.categories?.join(", ") || "Not Selected"}</p>
+      </div>
+
+      <div class="highlight-box">
+        Premium Member:
+        <strong>${vendor.premium_member ? "Yes" : "No"}</strong>
+      </div>
+    </div>
+
+    <div class="footer">
+      This is an automated onboarding notification for internal review.
+    </div>
+  </div>
+</body>
+</html>
+`;
+}
+
+export const vendorMailBody = ({ vendor }: any) => {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      border-top: 6px solid #00aa78;
+    }
+    .header {
+      background-color: #00aa78;
+      color: #ffffff;
+      padding: 24px 30px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .content {
+      padding: 30px;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    .highlight-box {
+      background-color: #f1fdf8;
+      border-left: 4px solid #00aa78;
+      padding: 12px 16px;
+      margin: 20px 0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      padding: 20px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">Welcome to FrameFinder</div>
+
+    <div class="content">
+      <p>Hi <strong>${vendor.business_owner || "there"}</strong>,</p>
+
+      <p>
+        Thank you for registering <strong>${vendor.business_name}</strong> as a vendor on
+        <strong>FrameFinder</strong>. We’re excited to have you join our eyewear-focused marketplace.
+      </p>
+
+      <div class="highlight-box">
+        ✅ Your vendor application has been successfully submitted.  
+        Our team is currently reviewing your details.
+      </div>
+
+      <p>
+        Once your account is verified, you’ll receive access to your vendor dashboard
+        where you can manage products, orders, and payouts.
+      </p>
+
+      <p>
+        We look forward to building a successful partnership with you.
+      </p>
+
+      <p style="margin-top: 24px;">
+        Warm regards,<br />
+        <strong>The FrameFinder Team</strong>
+      </p>
+    </div>
+
+    <div class="footer">
+      © 2025 FrameFinder. This is an automated email — please do not reply.
+    </div>
+  </div>
+</body>
+</html>
+`;
 }

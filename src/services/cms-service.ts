@@ -2,8 +2,8 @@ import { CMS } from "../models/cms.js";
 
 export interface createCMSEntryParams {
     key: string;
-    value: Array<{ title: string; desc: string; order: number; misc?: any }>;
-    images: Array<{ url: string; order: number }>;
+    value?: Array<{ title: string; desc: string; order: number; misc?: any }>;
+    images?: Array<{ url: string; order: number, action?: string; vendor_id?: string; product_id?: string; onModel?: string }>;
 }
 export const createCMSEntry = async ({ key, value, images }: createCMSEntryParams) => {
     const cms_entry = await CMS.create({ key, value, images });

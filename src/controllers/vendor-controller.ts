@@ -1,6 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { Vendor } from "../models/Vendor.js";
 import { VendorService } from "../services/vendor-service.js";
+import Mailer from "../lib/nodemailer.js";
+import { adminBody, vendorMailBody } from "../lib/mail.template.js";
+import logger from "../lib/logger.js";
 
 export const createVendor = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -14,6 +17,33 @@ export const createVendor = async (req: Request, res: Response, next: NextFuncti
             success: true,
             message: "Vendor created successfully",
             data: result
+        });
+
+        setImmediate(async () => {
+            try {
+                const vendor = await VendorService.searchVendorByPhone(phone);
+                if (!vendor) return;
+
+                const mail = new Mailer();
+
+                await mail.sendMail({
+                    from: process.env.EMAIL_USER,
+                    to: process.env.EMAIL_USER,
+                    subject: `New Vendor Registration - ${result.business_name}`,
+                    html: adminBody({ vendor })
+                });
+
+                await mail.sendMail({
+                    from: process.env.EMAIL_USER,
+                    to: result.email,
+                    subject: `Welcome to Frame Finder - ${result.business_name}`,
+                    html: vendorMailBody({ vendor })
+                });
+
+                logger.info("Vendor emails sent successfully");
+            } catch (err) {
+                logger.error("Email sending failed", err);
+            }
         });
         return;
 

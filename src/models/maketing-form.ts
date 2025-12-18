@@ -50,7 +50,11 @@ const marketingFormSchema = new Schema({
             },
 
             action: {
-                type: String
+                type: String,
+                enum: {
+                    values: ['vendor_store', 'product_link'],
+                    message: '{VALUE} is not a valid action'
+                }
             },
 
             product_id: {
@@ -60,8 +64,11 @@ const marketingFormSchema = new Schema({
 
             onModel: {
                 type: String,
-                required: true
-            }
+                enum: {
+                    values: ['Sunglass', 'Product', 'ContactLens', 'ColorContactLens', 'Reader', 'Accessories', 'LensSolution'],
+                    message: '{VALUE} is not a valid type, It must be one of Sunglass, Product, ContactLens, ColorContactLens, Reader, Accessories, LensSolution'
+                },
+            },
         }
     ],
 

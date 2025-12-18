@@ -6,6 +6,7 @@ import { generateTokens } from "../lib/uitils.js";
 import AppError from "../middlwares/Error.js";
 import { User } from "../models/user.js";
 import { userService } from "../services/user-services.js";
+import logger from "../lib/logger.js";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -344,6 +345,8 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
         });
         return;
     } catch (error) {
-
+        next(error);
+        logger.error("Error while resetting password:", error);
+        return;
     }
 }

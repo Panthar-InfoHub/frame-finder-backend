@@ -7,7 +7,7 @@ export const cms_router = Router();
 
 cms_router.post("/", [auth, isAdmin], createCMS);
 
-cms_router.get("/key", [auth, isAdmin], getCMSByKey);
+cms_router.get("/key", getCMSByKey);
 cms_router.get("/search", [auth, isAdmin], searchCMS);
 
 cms_router.put("/remove-sub-cms/:id", [auth, isAdmin], removeSubCMSValue);
