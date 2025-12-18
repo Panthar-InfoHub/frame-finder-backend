@@ -8,6 +8,22 @@ export const createCMS = async (req: Request, res: Response, next: NextFunction)
         const body: createCMSEntryParams = req.body;
         logger.debug("Creating CMS entry with data: ", body);
 
+        //Check iamges action and required fields
+        if (body.images && Array.isArray(body.images)) {
+            for (const img of body.images) {
+                if (img.action === "vendor_store" && !img.vendor_id) {
+                    logger.error("Vendor Id is required for action 'vendor_store'");
+                    throw new AppError("vendor_id is required for action 'vendor_store'", 400);
+                }
+                if (img.action === "product_link") {
+                    if (!img.product_id || !img.onModel) {
+                        logger.error("Product Id and onModel are required for action 'product_link'");
+                        throw new AppError("product_id and onModel are required for action 'product_link'", 400);
+                    }
+                }
+            }
+        }
+
         const cms_entry = await createCMSEntry(body);
         logger.debug("Created CMS entry ==> ", cms_entry);
 
